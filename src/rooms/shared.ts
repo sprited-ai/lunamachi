@@ -54,7 +54,7 @@ export function addStarField(
   let t = 0;
   return (dtMs) => {
     t += dtMs;
-    for (const s of stars) s.g.alpha = s.base + Math.sin(t * s.speed + s.phase) * 0.35 * s.base;
+    for (const s of stars) s.g.alpha = Math.min(1, s.base + Math.sin(t * s.speed + s.phase) * 0.35 * s.base);
   };
 }
 

@@ -9,6 +9,7 @@
 
 import { Graphics } from "pixi.js";
 import type { RoomComponent, Prop, SceneUpdate } from "../types";
+import { mulberry32 } from "../shared";
 import { attr, int, opt, num, hex } from "../coerce";
 
 interface NightRainProp extends Prop {
@@ -65,14 +66,19 @@ const NightRain: RoomComponent = {
       });
     }
 
+    // own stream for runtime respawns — drawn once from the shared seed at mount,
+    // so the shared (layout) stream isn't consumed per-frame (keeps the room's
+    // "same seed → same layout" guarantee for any prop mounted after this one).
+    const respawnRng = mulberry32((rng() * 0x100000000) >>> 0);
+
     return (dtMs, vw, vh) => {
       for (const d of drops) {
         const dy = d.speed * dtMs;
         d.y += dy;
         d.x -= dy * p.tilt;
         if (d.y > vh + d.len) {
-          d.y = -d.len - rng() * vh * 0.3;
-          d.x = rng() * (vw * (1 + p.tilt));
+          d.y = -d.len - respawnRng() * vh * 0.3;
+          d.x = respawnRng() * (vw * (1 + p.tilt));
         } else if (d.x < -vw * p.tilt) {
           d.x += vw * (1 + p.tilt);
         }
