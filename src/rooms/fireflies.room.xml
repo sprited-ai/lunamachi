@@ -8,5 +8,6 @@
   <Moon at="0.82,0.26"/>
   <StarField count="36"/>
   <Fireflies count="80" band="0.42,0.98" glow="5" color="#fff7c0"/>
+  <Particles count="26" shape="glow" motion="drift" color="#dfeecf" glow="3" size="1" band="0.5,0.92" sway="9"/>
   <MagicCircle/>
 </Room>
