@@ -1,0 +1,11 @@
+{
+  // Static-asset-only Worker (no server code) — serves the built SPA from dist/.
+  // SPA fallback for room paths (/white, /moon, …) is done here, NOT via a
+  // _redirects catch-all (which Workers Assets rejects as an infinite loop).
+  "name": "lunamachi",
+  "compatibility_date": "2025-06-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
