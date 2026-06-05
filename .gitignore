@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Full-size character exports — staging for scripts/optimize-beings.py.
+# Only the optimized public/beings/ are committed.
+public/_raw/

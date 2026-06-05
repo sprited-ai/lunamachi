@@ -1,0 +1,414 @@
+{
+  "beings": [
+    {
+      "id": "being-01",
+      "seed": 419503922,
+      "ref": true
+    },
+    {
+      "id": "being-02",
+      "seed": 1657964684,
+      "ref": true
+    },
+    {
+      "id": "being-03",
+      "seed": 436062377,
+      "ref": true
+    },
+    {
+      "id": "being-04",
+      "seed": 1783194396,
+      "ref": true
+    },
+    {
+      "id": "being-05",
+      "seed": 1707825964,
+      "ref": true
+    },
+    {
+      "id": "being-06",
+      "seed": 1300045223,
+      "ref": true
+    },
+    {
+      "id": "being-07",
+      "seed": 1007777723,
+      "ref": true
+    },
+    {
+      "id": "being-08",
+      "seed": 376804889,
+      "ref": true
+    },
+    {
+      "id": "being-09",
+      "seed": 291621917,
+      "ref": true
+    },
+    {
+      "id": "being-10",
+      "seed": 247635217,
+      "ref": true
+    },
+    {
+      "id": "being-11",
+      "seed": 32201253,
+      "ref": true
+    },
+    {
+      "id": "being-12",
+      "seed": 561017415,
+      "ref": true
+    },
+    {
+      "id": "being-13",
+      "seed": 445949246,
+      "ref": true
+    },
+    {
+      "id": "being-14",
+      "seed": 1332700124,
+      "ref": true
+    },
+    {
+      "id": "being-15",
+      "seed": 374519909,
+      "ref": true
+    },
+    {
+      "id": "being-16",
+      "seed": 1822463164,
+      "ref": true
+    },
+    {
+      "id": "being-17",
+      "seed": 340403190,
+      "ref": true
+    },
+    {
+      "id": "being-18",
+      "seed": 434701006,
+      "ref": true
+    },
+    {
+      "id": "being-19",
+      "seed": 1933774510,
+      "ref": true
+    },
+    {
+      "id": "being-20",
+      "seed": 1225934136,
+      "ref": true
+    },
+    {
+      "id": "being-21",
+      "seed": 1384206496,
+      "ref": true
+    },
+    {
+      "id": "being-22",
+      "seed": 643901672,
+      "ref": true
+    },
+    {
+      "id": "being-23",
+      "seed": 1865452341,
+      "ref": true
+    },
+    {
+      "id": "being-24",
+      "seed": 719814633,
+      "ref": true
+    },
+    {
+      "id": "being-25",
+      "seed": 1567202318,
+      "ref": true
+    },
+    {
+      "id": "being-26",
+      "seed": 1037567594,
+      "ref": true
+    },
+    {
+      "id": "being-27",
+      "seed": 446792893,
+      "ref": true
+    },
+    {
+      "id": "being-28",
+      "seed": 242301593,
+      "ref": true
+    },
+    {
+      "id": "being-29",
+      "seed": 1390498282,
+      "ref": true
+    },
+    {
+      "id": "being-30",
+      "seed": 846552807,
+      "ref": true
+    },
+    {
+      "id": "being-31",
+      "seed": 235201333,
+      "ref": true
+    },
+    {
+      "id": "being-32",
+      "seed": 783457997,
+      "ref": true
+    },
+    {
+      "id": "being-33",
+      "seed": 1199799496,
+      "ref": true
+    },
+    {
+      "id": "being-34",
+      "seed": 715337465,
+      "ref": true
+    },
+    {
+      "id": "being-35",
+      "seed": 342427925,
+      "ref": true
+    },
+    {
+      "id": "being-36",
+      "seed": 927701093,
+      "ref": true
+    },
+    {
+      "id": "being-37",
+      "seed": 2115821810,
+      "ref": true
+    },
+    {
+      "id": "being-38",
+      "seed": 102949431,
+      "ref": true
+    },
+    {
+      "id": "being-39",
+      "seed": 1833769108,
+      "ref": true
+    },
+    {
+      "id": "being-40",
+      "seed": 17905856,
+      "ref": true
+    },
+    {
+      "id": "being-41",
+      "seed": 1621040438,
+      "ref": true
+    },
+    {
+      "id": "being-42",
+      "seed": 1679718130,
+      "ref": true
+    },
+    {
+      "id": "being-43",
+      "seed": 533446905,
+      "ref": true
+    },
+    {
+      "id": "being-44",
+      "seed": 1941628242,
+      "ref": true
+    },
+    {
+      "id": "being-45",
+      "seed": 1604615900,
+      "ref": true
+    },
+    {
+      "id": "being-46",
+      "seed": 1891413213,
+      "ref": true
+    },
+    {
+      "id": "being-47",
+      "seed": 1483416328,
+      "ref": true
+    },
+    {
+      "id": "being-48",
+      "seed": 1286029343,
+      "ref": true
+    },
+    {
+      "id": "being-49",
+      "seed": 586126996,
+      "ref": true
+    },
+    {
+      "id": "being-50",
+      "seed": 787445319,
+      "ref": true
+    },
+    {
+      "id": "being-51",
+      "seed": 743579923,
+      "ref": true
+    },
+    {
+      "id": "being-52",
+      "seed": 867232840,
+      "ref": true
+    },
+    {
+      "id": "being-53",
+      "seed": 557991230,
+      "ref": true
+    },
+    {
+      "id": "being-54",
+      "seed": 145500417,
+      "ref": true
+    },
+    {
+      "id": "being-55",
+      "seed": 1424967962,
+      "ref": true
+    },
+    {
+      "id": "being-56",
+      "seed": 1845751398,
+      "ref": true
+    },
+    {
+      "id": "being-57",
+      "seed": 140961171,
+      "ref": true
+    },
+    {
+      "id": "being-58",
+      "seed": 127600945,
+      "ref": true
+    },
+    {
+      "id": "being-59",
+      "seed": 744973110,
+      "ref": true
+    },
+    {
+      "id": "being-60",
+      "seed": 1748468953,
+      "ref": true
+    },
+    {
+      "id": "being-61",
+      "seed": 1635044844,
+      "ref": true
+    },
+    {
+      "id": "being-62",
+      "seed": 1577389450,
+      "ref": true
+    },
+    {
+      "id": "being-63",
+      "seed": 1321040254,
+      "ref": true
+    },
+    {
+      "id": "being-64",
+      "seed": 618492476,
+      "ref": true
+    },
+    {
+      "id": "being-65",
+      "seed": 2132341948,
+      "ref": true
+    },
+    {
+      "id": "being-66",
+      "seed": 702242831,
+      "ref": true
+    },
+    {
+      "id": "being-67",
+      "seed": 280217487,
+      "ref": true
+    },
+    {
+      "id": "being-68",
+      "seed": 1660829776,
+      "ref": true
+    },
+    {
+      "id": "being-69",
+      "seed": 636455804,
+      "ref": true
+    },
+    {
+      "id": "being-70",
+      "seed": 1603707168,
+      "ref": true
+    },
+    {
+      "id": "being-71",
+      "seed": 1190776103,
+      "ref": true
+    },
+    {
+      "id": "being-72",
+      "seed": 264966731,
+      "ref": true
+    },
+    {
+      "id": "being-73",
+      "seed": 1711076557,
+      "ref": true
+    },
+    {
+      "id": "being-74",
+      "seed": 852666633,
+      "ref": true
+    },
+    {
+      "id": "being-75",
+      "seed": 259722594,
+      "ref": true
+    },
+    {
+      "id": "being-76",
+      "seed": 1682383722,
+      "ref": true
+    },
+    {
+      "id": "being-77",
+      "seed": 1519000941,
+      "ref": true
+    },
+    {
+      "id": "being-78",
+      "seed": 2105473279,
+      "ref": true
+    },
+    {
+      "id": "being-79",
+      "seed": 1368188237,
+      "ref": true
+    },
+    {
+      "id": "being-80",
+      "seed": 247347477,
+      "ref": true
+    },
+    {
+      "id": "being-81",
+      "seed": 1163436184,
+      "ref": true
+    },
+    {
+      "id": "being-82",
+      "seed": 234617223,
+      "ref": true
+    }
+  ]
+}

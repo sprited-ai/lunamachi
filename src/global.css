@@ -1,0 +1,163 @@
+/* mini-beings — white room.
+   Atmosphere from anima/v34: a soft light room with a faint floor seam, rounded
+   type, muted ink. The body gradient is set in JS (roomBackground) so the Tab
+   debug panel can move the horizon; this file is layout + the debug HUD. */
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: ui-rounded, "Avenir Next", system-ui, sans-serif;
+  background: #f3f6fb; /* fallback before JS sets the gradient */
+}
+
+.mini-beings-root {
+  position: fixed;
+  inset: 0;
+}
+
+/* transparent canvas — the body gradient is the room */
+.mini-beings-canvas canvas {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
+
+.mini-beings-hud {
+  position: fixed;
+  top: 22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.mini-beings-hud .title {
+  color: rgba(38, 42, 54, 0.8);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+}
+
+.mini-beings-hud .sub {
+  margin-top: 3px;
+  color: rgba(150, 154, 168, 0.85);
+  font: 11px ui-monospace, monospace;
+  letter-spacing: 0.08em;
+}
+
+/* --- Tab debug panel --- */
+.mini-beings-debug {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 20;
+  width: 248px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(18, 22, 30, 0.82);
+  border: 1px solid rgba(150, 154, 168, 0.28);
+  box-shadow: 0 8px 30px rgba(20, 26, 40, 0.28);
+  color: rgba(224, 228, 238, 0.92);
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  backdrop-filter: blur(8px);
+}
+
+.mini-beings-debug .hd {
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.mini-beings-debug .hd span { color: rgba(150, 154, 168, 0.8); font-weight: 400; }
+
+.mini-beings-debug .row {
+  display: grid;
+  grid-template-columns: 70px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+}
+.mini-beings-debug .row span { color: rgba(190, 196, 208, 0.92); }
+.mini-beings-debug .row b { text-align: right; color: rgba(120, 200, 255, 0.95); font-weight: 600; }
+.mini-beings-debug .row.check { grid-template-columns: 16px 1fr; }
+.mini-beings-debug input[type="range"] { width: 100%; accent-color: #5aa0ff; }
+.mini-beings-debug input[type="checkbox"] { accent-color: #5aa0ff; }
+
+.mini-beings-debug .btns { margin-top: 10px; }
+.mini-beings-debug button {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(150, 154, 168, 0.4);
+  background: rgba(90, 160, 255, 0.18);
+  color: rgba(224, 232, 245, 0.95);
+  font: inherit;
+  cursor: pointer;
+}
+.mini-beings-debug button:hover { background: rgba(90, 160, 255, 0.3); }
+.mini-beings-debug .ft { margin-top: 8px; text-align: center; color: rgba(150, 154, 168, 0.7); }
+
+/* --- music player (fancy Winamp) --- */
+.mb-player {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(26, 30, 40, 0.9), rgba(16, 19, 27, 0.92));
+  border: 1px solid rgba(150, 160, 180, 0.22);
+  box-shadow: 0 10px 34px rgba(16, 22, 38, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  color: rgba(224, 230, 240, 0.95);
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.mb-viz {
+  width: 176px;
+  height: 40px;
+  border-radius: 6px;
+  background: rgba(8, 10, 16, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(120, 200, 255, 0.12);
+}
+
+.mb-meta { width: 150px; overflow: hidden; }
+.mb-title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(150, 220, 210, 0.96);
+}
+.mb-artist { margin-top: 2px; color: rgba(150, 154, 168, 0.8); white-space: nowrap; }
+
+.mb-controls { display: flex; align-items: center; gap: 8px; }
+.mb-controls button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(150, 160, 180, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(224, 230, 240, 0.92);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mb-controls button:hover { background: rgba(120, 200, 255, 0.16); }
+.mb-controls .mb-play {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  background: rgba(120, 200, 255, 0.2);
+  border-color: rgba(120, 200, 255, 0.4);
+}
+.mb-vol { width: 72px; accent-color: #5ad0c0; }

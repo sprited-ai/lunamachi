@@ -1,0 +1,24 @@
+{
+  "name": "mini-beings",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A white room of AI-generated little beings, with a lo-fi music player. No ads — just music and tiny beings to watch.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pixi.js": "^8.14.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.3"
+  }
+}
