@@ -1,0 +1,11 @@
+<Room id="snow" name="first snow" accent="#bcd4ff" seed="11">
+  <Vibe>the hush of the first snow, drifting down on a still winter night</Vibe>
+  <Palette skyTop="#0a0f1f" skyMid="#131b30" horizon="#243049" ground="#1a2236"/>
+  <Background type="skyFloor"/>
+  <Tuning population="60" speed="26" poseChance="0.46" greetChance="0.14"
+          shadow="0.3" floorTop="0.6" floorBottom="0.96" height="118"/>
+
+  <StarField count="70"/>
+  <MagicCircle/>
+  <FirstSnow count="90" color="#f4f8ff" sway="14"/>
+</Room>

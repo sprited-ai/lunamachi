@@ -13,8 +13,15 @@ room is reproducible from its spec.
 
 ## Authoring a room
 
-Drop a `<id>.room.xml` beside the others and register it in `index.ts` (one
-import + one array entry — that array is also the order the portal cycles).
+Drop a `<id>.room.xml` beside the others and add its id to
+`rooms.manifest.json` (a plain list — also the order the portal cycles). No code
+change: `index.ts` globs the folder and loads the rooms the manifest names.
+
+Or generate one from a vibe — the existing rooms act as the style reference:
+
+```
+npm run gen:room -- "a rainy neon alley at midnight"
+```
 
 ```xml
 <Room id="moon" name="summer moon" accent="#b6a4ff" seed="7">
