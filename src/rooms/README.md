@@ -69,8 +69,16 @@ is an *open set*. No shared list or union to edit; `Prop` is an open base type.
 | `<Aurora>`     | `bands`, `hue`, `hue2`, `height`            | gen (opus)      |
 | `<FirstSnow>`  | `count`, `color`, `sway`                    | gen (opus)      |
 | `<NightRain>`  | `count`, `tilt`, `color`                    | gen (opus)      |
+| `<Particles>`  | `shape`, `motion`, `count`, `band`, `color`, `glow`, `size`, `length`, `tilt`, `sway`, `twinkle`, `depth` | data primitive |
 
 (The gen ones carry a reproducible recipe header — prompt + model — in their file.)
+
+**`<Particles>` is a data-driven primitive** — one component that expresses a
+whole family of ambient props by attribute, so a new particle effect is *data,
+not code*: `shape` ∈ dot/glow/line, `motion` ∈ fall/rise/drift/still. Snow, rain,
+fireflies, stars, dust, and embers all reduce to a `<Particles>` config (see its
+file header). This is the first step toward components-as-data; hand/gen code
+components remain the escape hatch for shapes particles can't express.
 
 **Adding a component by hand:** drop `components/<Tag>.ts` default-exporting a
 `RoomComponent`. Draw with Pixi `Graphics`/`Container` or reuse the `shared.ts`
