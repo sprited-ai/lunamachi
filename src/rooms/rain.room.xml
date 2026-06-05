@@ -7,4 +7,5 @@
 
   <MagicCircle/>
   <NightRain count="120" tilt="0.18" color="#9fb4d6"/>
+  <Particles count="34" shape="glow" motion="drift" glow="22" size="2" color="#9fb4c8" band="0.82,0.98" sway="26" speed="0.18" twinkle="0.18" depth="true"/>
 </Room>
