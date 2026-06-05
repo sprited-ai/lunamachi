@@ -60,12 +60,17 @@ room's seed. Every file there that default-exports a `RoomComponent` is
 **auto-registered** (`components/index.ts` globs the folder) — so the vocabulary
 is an *open set*. No shared list or union to edit; `Prop` is an open base type.
 
-| tag            | attributes                                  |
-| -------------- | ------------------------------------------- |
-| `<MagicCircle>`| — (the portal; engine-placed)               |
-| `<Moon>`       | `at="fx,fy"`                                |
-| `<StarField>`  | `count`                                     |
-| `<Fireflies>`  | `count`, `band="lo,hi"`, `glow`, `color`    |
+| tag            | attributes                                  | how it was made |
+| -------------- | ------------------------------------------- | --------------- |
+| `<MagicCircle>`| — (the portal; engine-placed)               | hand            |
+| `<Moon>`       | `at="fx,fy"`                                | hand            |
+| `<StarField>`  | `count`                                     | hand            |
+| `<Fireflies>`  | `count`, `band="lo,hi"`, `glow`, `color`    | hand            |
+| `<Aurora>`     | `bands`, `hue`, `hue2`, `height`            | gen (opus)      |
+| `<FirstSnow>`  | `count`, `color`, `sway`                    | gen (opus)      |
+| `<NightRain>`  | `count`, `tilt`, `color`                    | gen (opus)      |
+
+(The gen ones carry a reproducible recipe header — prompt + model — in their file.)
 
 **Adding a component by hand:** drop `components/<Tag>.ts` default-exporting a
 `RoomComponent`. Draw with Pixi `Graphics`/`Container` or reuse the `shared.ts`
