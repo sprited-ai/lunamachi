@@ -26,6 +26,7 @@ export function buildRoom(spec: RoomSpec): Room {
     createScene: mountable.length
       ? (w, h) => {
           const container = new Container();
+          container.label = `scene:${spec.id}`;
           const rng = mulberry32(spec.seed); // one stream → reproducible layout
           const ctx = { container, w, h, rng };
           const updates: SceneUpdate[] = mountable.map(

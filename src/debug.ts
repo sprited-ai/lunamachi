@@ -8,6 +8,7 @@ import { Application, Container } from "pixi.js";
 import { COMPONENTS } from "./rooms/components";
 import { mulberry32 } from "./rooms/shared";
 import type { Prop, RoomComponent, SceneUpdate } from "./rooms/types";
+import { buildTree } from "./scene-tree";
 
 const mountable = COMPONENTS.filter((c) => c.mount && c.example);
 
@@ -26,41 +27,6 @@ function formatProp(p: Prop): string {
       return `${k}: ${val}`;
     })
     .join("\n");
-}
-
-// A compact one-line summary of a Pixi display node's live properties.
-function describe(node: Container): string {
-  const name = node.label || node.constructor?.name || "Object";
-  const bits = [`x${node.x | 0} y${node.y | 0}`, `α${(node.alpha ?? 1).toFixed(2)}`];
-  const s = node.scale?.x ?? 1;
-  if (Math.abs(s - 1) > 0.001) bits.push(`s${s.toFixed(2)}`);
-  if (node.rotation) bits.push(`r${node.rotation.toFixed(2)}`);
-  if (node.visible === false) bits.push("hidden");
-  return `${name}  ${bits.join("  ")}`;
-}
-
-const MAX_ROWS = 90;
-
-function buildTree(roots: Container[]): string {
-  const rows: string[] = [];
-  let count = 0;
-  const walk = (node: Container, depth: number) => {
-    if (count >= MAX_ROWS) return;
-    count++;
-    const kids = node.children as Container[];
-    const indent = "  ".repeat(depth);
-    const lead = kids.length ? "▸ " : "· ";
-    rows.push(`${indent}${lead}${describe(node)}${kids.length ? `  ·${kids.length}` : ""}`);
-    for (const k of kids) {
-      if (count >= MAX_ROWS) {
-        rows.push(`${"  ".repeat(depth + 1)}…`);
-        break;
-      }
-      walk(k, depth + 1);
-    }
-  };
-  for (const r of roots) walk(r, 0);
-  return rows.join("\n") || "(empty)";
 }
 
 (async () => {
@@ -105,7 +71,7 @@ function buildTree(roots: Container[]): string {
   // live scene-tree refresh (only while the inspector is open)
   let inspectorOpen = true;
   window.setInterval(() => {
-    if (inspectorOpen) inspTree.textContent = buildTree(stage.children as Container[]);
+    if (inspectorOpen) inspTree.textContent = buildTree(stage.children as Container[], { maxRows: 200 });
   }, 350);
 
   const toggleInspector = () => {
