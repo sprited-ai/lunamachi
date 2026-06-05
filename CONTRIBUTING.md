@@ -26,7 +26,8 @@ cd lunamachi && npm install
    Use `ctx.rng` for all randomness so the layout is reproducible from the seed.
    See [`src/rooms/README.md`](src/rooms/README.md) for the full contract and
    `src/rooms/components/Fireflies.ts` for a worked example.
-2. Use it: add your `<YourTag .../>` to a room's `*.room.xml`, or make a new room.
+2. Use it: add your `<YourTag .../>` to a room's `*.room.xml` — or make a new room
+   (drop `<id>.room.xml` and add its id to `src/rooms/rooms.manifest.json`).
 3. `npm run build` must pass.
 4. Open a PR.
 
