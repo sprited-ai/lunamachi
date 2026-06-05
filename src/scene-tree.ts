@@ -22,10 +22,12 @@ export interface TreeOpts {
   /** don't expand a node with more than this many children (show "·N ⊘") —
    *  keeps a busy live room readable (the 120-being crowd stays one line) */
   collapseOver?: number;
+  /** don't recurse past this depth — e.g. list beings but not their sprites */
+  maxDepth?: number;
 }
 
 export function buildTree(roots: Container[], opts: TreeOpts = {}): string {
-  const { maxRows = 240, collapseOver = Infinity } = opts;
+  const { maxRows = 240, collapseOver = Infinity, maxDepth = Infinity } = opts;
   const rows: string[] = [];
   let count = 0;
 
@@ -38,7 +40,7 @@ export function buildTree(roots: Container[], opts: TreeOpts = {}): string {
     const lead = kids.length ? "▸ " : "· ";
     const tail = kids.length ? `  ·${kids.length}${collapsed ? " ⊘" : ""}` : "";
     rows.push(`${indent}${lead}${describe(node)}${tail}`);
-    if (collapsed) return;
+    if (collapsed || depth >= maxDepth) return;
     for (const k of kids) {
       if (count >= maxRows) {
         rows.push(`${"  ".repeat(depth + 1)}…`);

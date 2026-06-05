@@ -69,6 +69,7 @@ export class Being {
     ref: Sprite | null,
   ) {
     this.id = id;
+    this.container.label = id; // so it reads as a named node in the editor hierarchy
     this.sprites = sprites;
 
     const frame = sprites.idle.texture;
