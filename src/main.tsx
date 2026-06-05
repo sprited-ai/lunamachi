@@ -60,15 +60,14 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return a;
 }
 
-/** Give each room its own disjoint slice of the (shuffled) character pool, so
- *  every room is inhabited by a different cast. Within a room the cast is cycled
- *  to reach its population. */
-function partitionByRoom(all: BeingMeta[], nRooms: number): BeingMeta[][] {
-  const shuffled = seededShuffle(all, BEING_SEED);
-  const per = Math.max(1, Math.floor(shuffled.length / nRooms));
-  return Array.from({ length: nRooms }, (_, i) =>
-    i === nRooms - 1 ? shuffled.slice(i * per) : shuffled.slice(i * per, (i + 1) * per),
-  );
+/** Every room draws from the FULL character pool. With only ~82 characters and
+ *  room populations of 55–100, splitting into disjoint per-room casts left each
+ *  room cycling ~16 characters 4–6× (heavy repeats). Instead each room gets the
+ *  whole pool, shuffled with its own seed — so the casts still feel distinct
+ *  (different ordering, and which few repeat in an over-full room differs) while
+ *  no character repeats unless the room's population exceeds the pool size. */
+function castPerRoom(all: BeingMeta[], nRooms: number): BeingMeta[][] {
+  return Array.from({ length: nRooms }, (_, i) => seededShuffle(all, BEING_SEED + i * 0x9e3779b1));
 }
 
 // Unity-style selection outline — an orange silhouette traced around the
@@ -241,7 +240,7 @@ function Room() {
       const index: { beings: BeingMeta[] } = await fetch(`${BEINGS_URL}/beings.json`).then((r) => r.json());
       if (!index.beings.length) throw new Error("no beings in index");
       metaRef.current = index.beings;
-      ownedRef.current = partitionByRoom(index.beings, ROOMS.length); // each room its own cast
+      ownedRef.current = castPerRoom(index.beings, ROOMS.length); // each room: full pool, own shuffle
 
       const app = new Application();
       await app.init({ backgroundAlpha: 0, resizeTo: host, antialias: false });
