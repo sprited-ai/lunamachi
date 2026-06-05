@@ -10,6 +10,7 @@ import { Being } from "./being";
 import { cfg } from "./config";
 import { MusicPlayer } from "./player";
 import { ROOMS, type Scene } from "./rooms";
+import { createPortal, type Portal } from "./portal";
 import "./global.css";
 
 const BEINGS_URL = "";
@@ -67,6 +68,7 @@ function Room() {
   const respawnTokenRef = useRef(0);
   const roomIndexRef = useRef(0);
   const sceneRef = useRef<Scene | null>(null);
+  const portalRef = useRef<Portal | null>(null);
   const [roomName, setRoomName] = useState(ROOMS[0].name);
 
   const applyRoomBg = () => {
@@ -97,6 +99,8 @@ function Room() {
     const path = `/${room.id}`;
     if (nav === "push" && window.location.pathname !== path) history.pushState({}, "", path);
     else if (nav === "replace") history.replaceState({}, "", path);
+    // The portal hints its destination with that room's accent colour.
+    portalRef.current?.setColor(ROOMS[(i + 1) % ROOMS.length].accent);
     setRoomName(room.name);
     document.title = `${room.name} · lunamachi`;
     void respawn(); // swap in this room's cast
@@ -174,8 +178,15 @@ function Room() {
 
       const world = new Container();
       world.sortableChildren = true;
+      world.eventMode = "none"; // beings don't intercept clicks → portal stays tappable
       app.stage.addChild(world);
       worldRef.current = world;
+
+      // Floor portal: drawn under the beings (so they wander over it) but still
+      // clickable (beings are non-interactive). Tapping it travels to the next room.
+      const portal = createPortal(() => enterRoom((roomIndexRef.current + 1) % ROOMS.length));
+      app.stage.addChildAt(portal.container, 0); // below world; enterRoom inserts scene under it
+      portalRef.current = portal;
 
       enterRoom(roomIndexRef.current, "replace"); // mount scene + cast + canonicalize URL
 
@@ -185,6 +196,7 @@ function Room() {
         const h = app.renderer.height;
         const dt = ticker.deltaMS;
         sceneRef.current?.update(dt, w, h);
+        portal.update(dt, w, h, w * 0.5, h * 0.75);
         for (const b of beings) b.update(dt, w, h, ticker);
 
         for (let a = 0; a < beings.length; a++) {
@@ -212,17 +224,6 @@ function Room() {
   return (
     <div className="mini-beings-root">
       <div ref={hostRef} className="mini-beings-canvas" />
-      <div className="room-switch">
-        {ROOMS.map((r) => (
-          <button
-            key={r.id}
-            className={r.name === roomName ? "active" : ""}
-            onClick={() => enterRoom(ROOMS.indexOf(r))}
-          >
-            {r.name}
-          </button>
-        ))}
-      </div>
       {!showDebug && (
         <div className="mini-beings-hud">
           <div className="title">{roomName}</div>

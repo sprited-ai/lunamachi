@@ -13,6 +13,8 @@ export interface Scene {
 export interface Room {
   id: string;
   name: string;
+  /** accent colour (used to tint the portal that travels here) */
+  accent: number;
   /** body CSS background for this room */
   background: () => string;
   /** behaviour tweaks merged into cfg on enter (never changes population) */
@@ -134,6 +136,6 @@ function createMoonScene(w: number, h: number): Scene {
 // --- registry -----------------------------------------------------------------
 
 export const ROOMS: Room[] = [
-  { id: "white", name: "white room", background: whiteBackground, tuning: WHITE_TUNING },
-  { id: "moon", name: "summer moon", background: nightBackground, tuning: MOON_TUNING, createScene: createMoonScene },
+  { id: "white", name: "white room", accent: 0x86b8ff, background: whiteBackground, tuning: WHITE_TUNING },
+  { id: "moon", name: "summer moon", accent: 0xb6a4ff, background: nightBackground, tuning: MOON_TUNING, createScene: createMoonScene },
 ];
