@@ -34,16 +34,22 @@ export function addMoon(
 }
 
 /** Scattered stars across the upper sky, gently twinkling. */
-export function addStarField(container: Container, w: number, h: number, count: number): SceneUpdate {
+export function addStarField(
+  container: Container,
+  w: number,
+  h: number,
+  count: number,
+  rng: () => number,
+): SceneUpdate {
   const stars: { g: Graphics; base: number; phase: number; speed: number }[] = [];
   for (let i = 0; i < count; i++) {
-    const g = new Graphics().circle(0, 0, 0.5 + Math.random() * 1.4).fill({ color: 0xffffff });
-    g.x = Math.random() * w;
-    g.y = Math.random() * h * 0.62;
-    const base = 0.25 + Math.random() * 0.5;
+    const g = new Graphics().circle(0, 0, 0.5 + rng() * 1.4).fill({ color: 0xffffff });
+    g.x = rng() * w;
+    g.y = rng() * h * 0.62;
+    const base = 0.25 + rng() * 0.5;
     g.alpha = base;
     container.addChild(g);
-    stars.push({ g, base, phase: Math.random() * Math.PI * 2, speed: 0.001 + Math.random() * 0.003 });
+    stars.push({ g, base, phase: rng() * Math.PI * 2, speed: 0.001 + rng() * 0.003 });
   }
   let t = 0;
   return (dtMs) => {
@@ -65,6 +71,7 @@ export function addFireflies(
   w: number,
   h: number,
   count: number,
+  rng: () => number,
   opts: FireflyOptions = {},
 ): SceneUpdate {
   const [b0, b1] = opts.band ?? [0.6, 0.96];
@@ -75,12 +82,12 @@ export function addFireflies(
     const g = new Container();
     g.addChild(new Graphics().circle(0, 0, glow).fill({ color: 0xfff1a0, alpha: 0.22 }));
     g.addChild(new Graphics().circle(0, 0, 1.5).fill({ color }));
-    g.x = Math.random() * w;
-    g.y = h * (b0 + Math.random() * (b1 - b0));
+    g.x = rng() * w;
+    g.y = h * (b0 + rng() * (b1 - b0));
     container.addChild(g);
     flies.push({
-      g, x: g.x, y: g.y, phase: Math.random() * Math.PI * 2,
-      sx: 6 + Math.random() * 10, sy: 4 + Math.random() * 8,
+      g, x: g.x, y: g.y, phase: rng() * Math.PI * 2,
+      sx: 6 + rng() * 10, sy: 4 + rng() * 8,
     });
   }
   return (dtMs) => {
@@ -97,5 +104,18 @@ export function addFireflies(
 export function combine(updates: SceneUpdate[]): SceneUpdate {
   return (dtMs, w, h) => {
     for (const u of updates) u(dtMs, w, h);
+  };
+}
+
+/** Seeded RNG (mulberry32). The deterministic layer of the room model: the same
+ *  seed yields the same procedural layout, so a room is reproducible from its spec. */
+export function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }

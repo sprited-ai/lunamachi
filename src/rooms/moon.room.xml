@@ -1,0 +1,12 @@
+<Room id="moon" name="summer moon" accent="#b6a4ff" seed="7">
+  <Vibe>watching a big beautiful moon together on a warm summer night</Vibe>
+  <Palette skyTop="#070b1e" skyMid="#141b3c" horizon="#1d2550" ground="#14182f"/>
+  <Background type="skyFloor"/>
+  <Tuning population="70" speed="32" poseChance="0.42" greetChance="0.16"
+          shadow="0.34" floorTop="0.62" floorBottom="0.96" height="120"/>
+
+  <Moon at="0.72,0.2"/>
+  <StarField count="110"/>
+  <Fireflies count="16"/>
+  <MagicCircle/>
+</Room>

@@ -1,0 +1,9 @@
+<Room id="white" name="white room" accent="#86b8ff" seed="1">
+  <Vibe>an endless quiet white gallery in soft daylight — a faint horizon, lots of little beings milling about</Vibe>
+  <Palette skyTop="#e6ecf4" horizon="#d0d9e7" ground="#ffffff"/>
+  <Background type="gallery"/>
+  <Tuning population="100" speed="75" poseChance="0.2" greetChance="0.13"
+          shadow="0.7" floorTop="0.56" floorBottom="0.95" horizon="0.56" height="128"/>
+
+  <MagicCircle/>
+</Room>

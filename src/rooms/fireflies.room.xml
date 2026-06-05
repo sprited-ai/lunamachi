@@ -1,0 +1,11 @@
+<Room id="fireflies" name="fireflies" accent="#d8f0a0" seed="3">
+  <Vibe>a warm summer dusk in a meadow, alive with drifting fireflies</Vibe>
+  <Palette skyTop="#0e1f28" skyMid="#1b3e42" horizon="#234a40" ground="#0f231f"/>
+  <Background type="skyFloor"/>
+  <Tuning population="55" speed="28" poseChance="0.4" greetChance="0.16"
+          shadow="0.3" floorTop="0.6" floorBottom="0.97" height="118"/>
+
+  <StarField count="36"/>
+  <Fireflies count="80" band="0.42,0.98" glow="5" color="#fff7c0"/>
+  <MagicCircle/>
+</Room>
