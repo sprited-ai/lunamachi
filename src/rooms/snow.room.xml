@@ -6,6 +6,7 @@
           shadow="0.3" floorTop="0.6" floorBottom="0.96" height="118"/>
 
   <StarField count="70"/>
-  <MagicCircle/>
+  <Aurora bands="2" hue="#a8d8ff" hue2="#c9d4ff" height="0.32"/>
   <FirstSnow count="90" color="#f4f8ff" sway="14"/>
+  <MagicCircle/>
 </Room>

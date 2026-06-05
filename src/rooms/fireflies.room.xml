@@ -5,6 +5,7 @@
   <Tuning population="55" speed="28" poseChance="0.4" greetChance="0.16"
           shadow="0.3" floorTop="0.6" floorBottom="0.97" height="118"/>
 
+  <Moon at="0.82,0.26"/>
   <StarField count="36"/>
   <Fireflies count="80" band="0.42,0.98" glow="5" color="#fff7c0"/>
   <MagicCircle/>
