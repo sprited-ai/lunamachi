@@ -6,3 +6,10 @@ dist
 # Full-size character exports — staging for scripts/optimize-beings.py.
 # Only the optimized public/beings/ are committed.
 public/_raw/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
