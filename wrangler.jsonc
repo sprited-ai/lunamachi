@@ -18,10 +18,12 @@
     { "binding": "SUMMON_KV", "id": "98874e61446f485181bf3076099ef55d" }
   ],
   "vars": {
+    // Kill switch — summon is ON. Set to "0" to disable without a code change.
+    "SUMMON_ENABLED": "1",
     // Soft daily caps for the (anonymous, free) summon endpoint.
     "SUMMON_IP_CAP": "5",
     "SUMMON_DAILY_CAP": "100"
   }
-  // Secret (set out-of-band, never committed): SPRITEDX_API_KEY
-  // Var (kill switch, default off): SUMMON_ENABLED — set "1" to enable summon.
+  // Secret (set out-of-band, never committed): SPRITEDX_API_KEY — required for the
+  // summon endpoint to authenticate with sprite-dx.
 }
