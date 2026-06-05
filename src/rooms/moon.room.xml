@@ -8,5 +8,6 @@
   <Moon at="0.72,0.2"/>
   <StarField count="110"/>
   <Fireflies count="16"/>
+  <Aurora bands="3" hue="#9ff0c8" hue2="#b89bff" height="0.4"/>
   <MagicCircle/>
 </Room>

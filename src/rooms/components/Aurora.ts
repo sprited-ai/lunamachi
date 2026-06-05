@@ -1,0 +1,111 @@
+// <Aurora bands="3" hue="#9ff0c8" hue2="#b89bff" height="0.4"/>
+// Northern lights: layered ribbons of green-violet light, slowly waving high in the sky.
+
+import { Container, Graphics } from "pixi.js";
+import type { RoomComponent, Prop, SceneUpdate } from "../types";
+import { int, opt, num, hex } from "../coerce";
+
+interface AuroraProp extends Prop {
+  type: "aurora";
+  bands: number;
+  hue: number;
+  hue2: number;
+  height: number; // fraction of room height the curtain spans
+}
+
+const Aurora: RoomComponent = {
+  tag: "Aurora",
+  type: "aurora",
+  parse: (el): AuroraProp => ({
+    type: "aurora",
+    bands: opt(el, "bands", int, 3),
+    hue: opt(el, "hue", hex, 0x9ff0c8),
+    hue2: opt(el, "hue2", hex, 0xb89bff),
+    height: opt(el, "height", num, 0.4),
+  }),
+  mount: (prop, { container, rng }) => {
+    const p = prop as AuroraProp;
+    const SEG = 28; // horizontal sample points per ribbon
+
+    interface Band {
+      g: Graphics;
+      color: number;
+      yBase: number;   // fraction of height for top of ribbon
+      amp: number;     // vertical wave amplitude (px)
+      thick: number;   // ribbon thickness (px)
+      wave: number;    // spatial frequency
+      speed: number;   // phase speed
+      phase: number;
+      alpha: number;
+    }
+
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const mix = (c1: number, c2: number, t: number) => {
+      const r = lerp((c1 >> 16) & 0xff, (c2 >> 16) & 0xff, t);
+      const g = lerp((c1 >> 8) & 0xff, (c2 >> 8) & 0xff, t);
+      const b = lerp(c1 & 0xff, c2 & 0xff, t);
+      return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
+    };
+
+    const layer = new Container();
+    container.addChild(layer);
+
+    const bands: Band[] = [];
+    const n = Math.max(1, p.bands);
+    for (let i = 0; i < n; i++) {
+      const g = new Graphics();
+      layer.addChild(g);
+      const t = n === 1 ? 0 : i / (n - 1);
+      bands.push({
+        g,
+        color: mix(p.hue, p.hue2, t * 0.7 + rng() * 0.15),
+        yBase: 0.08 + t * (p.height * 0.55) + rng() * 0.04,
+        amp: (12 + rng() * 18) * (0.6 + p.height),
+        thick: 18 + rng() * 26,
+        wave: 1.4 + rng() * 1.6,
+        speed: 0.00018 + rng() * 0.00022,
+        phase: rng() * Math.PI * 2,
+        alpha: 0.1 + rng() * 0.08,
+      });
+    }
+
+    let t = 0;
+    const update: SceneUpdate = (dtMs, vw, vh) => {
+      t += dtMs;
+      for (const b of bands) {
+        const ph = b.phase + t * b.speed;
+        const top = vh * b.yBase;
+        const g = b.g;
+        g.clear();
+
+        // Build a wavy filled curtain: top edge then bottom edge back.
+        const topPts: [number, number][] = [];
+        for (let s = 0; s <= SEG; s++) {
+          const fx = s / SEG;
+          const x = fx * vw;
+          const y =
+            top +
+            Math.sin(fx * Math.PI * b.wave + ph) * b.amp +
+            Math.sin(fx * Math.PI * b.wave * 2.3 + ph * 1.7) * b.amp * 0.35;
+          topPts.push([x, y]);
+        }
+
+        // soft outer glow, then brighter core, drawn as two stacked ribbons
+        for (let pass = 0; pass < 2; pass++) {
+          const thick = pass === 0 ? b.thick * 2.0 : b.thick;
+          const a = pass === 0 ? b.alpha * 0.5 : b.alpha;
+          g.moveTo(topPts[0][0], topPts[0][1]);
+          for (let s = 1; s <= SEG; s++) g.lineTo(topPts[s][0], topPts[s][1]);
+          for (let s = SEG; s >= 0; s--) g.lineTo(topPts[s][0], topPts[s][1] + thick);
+          g.closePath();
+          g.fill({ color: b.color, alpha: a });
+        }
+      }
+    };
+
+    return update;
+  },
+  example: { type: "aurora", bands: 3, hue: 0x9ff0c8, hue2: 0xb89bff, height: 0.4 } as AuroraProp,
+};
+
+export default Aurora;
