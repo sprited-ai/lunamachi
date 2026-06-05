@@ -3,6 +3,9 @@ dist
 .DS_Store
 *.local
 
+# Local secrets for gen:component (Claude API key). Never commit.
+.dev.vars
+
 # Full-size character exports — staging for scripts/optimize-beings.py.
 # Only the optimized public/beings/ are committed.
 public/_raw/

@@ -3,7 +3,11 @@
 // A room is authored as XML (its source of truth), parsed into a typed RoomSpec
 // — the room's full *parameter space*. buildRoom() turns a spec into a live Room.
 // Changing the spec = changing the room. The seed lives here (deterministic
-// procedural layer), not in any generator. Schema grows one prop at a time.
+// procedural layer), not in any generator.
+//
+// Components are an OPEN set: each lives in its own file under components/ and
+// self-registers, so the vocabulary can grow (by hand or by the gen flow) without
+// editing any shared type. Hence `Prop` is an open base, not a closed union.
 
 import type { Container } from "pixi.js";
 import type { Config } from "../config";
@@ -23,13 +27,33 @@ export interface Palette {
   ground: number;
 }
 
-/** The bounded prop vocabulary a room composes. Grows one entry at a time.
- *  v0: magic-circle (the portal) + ambient moon / starField / fireflies. */
-export type Prop =
-  | { type: "magic-circle" }
-  | { type: "moon"; at: [number, number] }
-  | { type: "starField"; count: number }
-  | { type: "fireflies"; count: number; band: [number, number]; glow?: number; color?: number };
+/** An in-world prop instance, as parsed from its tag. Open by design: each
+ *  component defines its own shape extending this (discriminated by `type`). */
+export interface Prop {
+  type: string;
+}
+
+/** What a component gets to draw into when it mounts. `rng` is the room's seeded
+ *  stream — use it for all randomness so the layout is reproducible. */
+export interface MountCtx {
+  container: Container;
+  w: number;
+  h: number;
+  rng: () => number;
+}
+
+/** A self-contained room component — like a React component: owns its tag, how
+ *  to parse its attributes, and (for visual props) how to mount into the scene. */
+export interface RoomComponent {
+  /** PascalCase XML tag, e.g. "Moon" */
+  tag: string;
+  /** the prop discriminant this component produces, e.g. "moon" */
+  type: string;
+  /** parse this element's attributes into a typed prop */
+  parse(el: Element): Prop;
+  /** draw into the scene container; omitted for non-visual / engine-handled props */
+  mount?(prop: Prop, ctx: MountCtx): SceneUpdate;
+}
 
 /** The parsed, validated room — the room model's parameter space. */
 export interface RoomSpec {

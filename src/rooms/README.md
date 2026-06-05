@@ -46,9 +46,12 @@ attribute) rather than failing silently.
 
 ## Components
 
-Each component (`components.ts`) is self-contained, like a React component: it
-owns its PascalCase `tag`, how to `parse` its attributes into a typed prop, and
-(for visual props) how to `mount` itself into the scene under the room's seed.
+Each component is **one self-contained file** under `components/`, like a React
+component: it owns its PascalCase `tag`, how to `parse` its attributes into a
+typed prop, and (for visual props) how to `mount` itself into the scene under the
+room's seed. Every file there that default-exports a `RoomComponent` is
+**auto-registered** (`components/index.ts` globs the folder) — so the vocabulary
+is an *open set*. No shared list or union to edit; `Prop` is an open base type.
 
 | tag            | attributes                                  |
 | -------------- | ------------------------------------------- |
@@ -57,7 +60,21 @@ owns its PascalCase `tag`, how to `parse` its attributes into a typed prop, and
 | `<StarField>`  | `count`                                     |
 | `<Fireflies>`  | `count`, `band="lo,hi"`, `glow`, `color`    |
 
-**Adding a component:** write a `RoomComponent` (`tag` / `type` / `parse` /
-optional `mount`), add it to `COMPONENTS`, and add its prop shape to the `Prop`
-union in `types.ts`. Rooms can use the new tag immediately. The drawing itself
-goes in `shared.ts` (the no-asset primitives) and the component wraps it.
+**Adding a component by hand:** drop `components/<Tag>.ts` default-exporting a
+`RoomComponent`. Draw with Pixi `Graphics`/`Container` or reuse the `shared.ts`
+primitives; use `ctx.rng` for all randomness (so the layout is seed-reproducible).
+It's usable in any room's XML immediately.
+
+**Adding a component by prompt** — the same way you author a room:
+
+```
+npm run gen:component -- "북극광이 천천히 흐르는 오로라" --room moon
+```
+
+Claude authors the procedural component from the prompt, wires its `<Tag/>` into
+the target room, and gates on a clean `npm run build`; on failure it feeds the
+build errors back and retries, else reverts. Add `--commit` to push to `main`,
+`--deploy` to ship. A reproducible recipe (prompt + model + date) is stamped into
+the file header. Needs `ANTHROPIC_API_KEY` in `.dev.vars` (see `.dev.vars.example`).
+The same generator brain is runtime-agnostic, so it can later sit behind a Worker
+endpoint for in-game summoning.
