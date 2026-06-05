@@ -1,8 +1,9 @@
-# mini-beings
+# lunamachi
 
-A quiet white room full of tiny AI-generated beings that wander, pose, and greet
-each other — with a fancy-Winamp lo-fi music player and a frequency visualizer.
-No ads, no feeds. Just music and little beings to watch.
+Rooms of tiny AI-generated beings that wander, pose, and greet each other —
+with a fancy-Winamp lo-fi music player and a frequency visualizer. Each room is
+its own URL (`/white`, `/moon`, …). No ads, no feeds. Just music and little
+beings to watch. Live at [lunamachi.sprited.ai](https://lunamachi.sprited.ai).
 
 A standalone static app (extracted from `sprite-dx`). Pure client side: Pixi.js
 renders the room, the Web Audio API drives the visualizer, assets are served
@@ -45,3 +46,9 @@ Requires Python + Pillow.
 ### Adding music
 
 Drop an `.mp3` into `public/music/` and add an entry to `public/music/playlist.json`.
+
+## License
+
+Code is [MIT](./LICENSE). The bundled character art and music under `public/`
+are © Sprited, included so the app runs out of the box — please bring your own
+assets for derivative works.
