@@ -1,0 +1,10 @@
+<Room id="rain" name="rain" accent="#93a8c8" seed="23">
+  <Vibe>a quiet rainy night — everyone in, watching the rain come down together</Vibe>
+  <Palette skyTop="#0d1622" skyMid="#16202e" horizon="#202b3c" ground="#161d29"/>
+  <Background type="skyFloor"/>
+  <Tuning population="55" speed="24" poseChance="0.5" greetChance="0.13"
+          shadow="0.28" floorTop="0.6" floorBottom="0.96" height="116"/>
+
+  <MagicCircle/>
+  <NightRain count="120" tilt="0.18" color="#9fb4d6"/>
+</Room>
