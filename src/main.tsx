@@ -9,6 +9,7 @@ import { Application, Container } from "pixi.js";
 import { Being } from "./being";
 import { cfg } from "./config";
 import { MusicPlayer } from "./player";
+import { ROOMS, type Scene } from "./rooms";
 import "./global.css";
 
 const BEINGS_URL = "";
@@ -16,26 +17,6 @@ const ASSETS = `${BEINGS_URL}/beings`;
 const GREET_DISTANCE = 24;
 
 interface BeingMeta { id: string; seed: number | null; ref?: boolean }
-
-/** White-room gradient: light wall, a faint darker seam at the horizon, pure-white floor below. */
-function roomBackground(h0: number): string {
-  const h = Math.round(h0 * 100);
-  return (
-    `radial-gradient(80% 50% at 52% 6%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%),` +
-    `linear-gradient(to bottom,` +
-    `#e6ecf4 0%,` +
-    `#e1e8f1 ${Math.round(h * 0.62)}%,` +
-    `#d8dfea ${Math.round(h * 0.92)}%,` +
-    `#d0d9e7 ${h}%,` +            /* horizon — faint darkest seam (vanishing line) */
-    `#eef2f8 ${h + 5}%,` +
-    `#fafbfe ${h + 11}%,` +
-    `#ffffff ${h + 18}%)`        /* floor — pure white, the brightest */
-  );
-}
-
-function applyGradient() {
-  document.body.style.background = roomBackground(cfg.horizon);
-}
 
 function Room() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -46,6 +27,36 @@ function Room() {
   const worldRef = useRef<Container | null>(null);
   const beingsRef = useRef<Being[]>([]);
   const metaRef = useRef<BeingMeta[]>([]);
+  const roomIndexRef = useRef(0);
+  const sceneRef = useRef<Scene | null>(null);
+  const [roomName, setRoomName] = useState(ROOMS[0].name);
+
+  const applyRoomBg = () => {
+    document.body.style.background = ROOMS[roomIndexRef.current].background();
+  };
+
+  function enterRoom(i: number) {
+    roomIndexRef.current = i;
+    const room = ROOMS[i];
+    Object.assign(cfg, room.tuning); // never includes population — crowd persists
+    document.body.dataset.room = room.id; // lets CSS adapt overlay text to the mood
+    applyRoomBg();
+    const app = appRef.current;
+    if (app) {
+      if (sceneRef.current) {
+        app.stage.removeChild(sceneRef.current.container);
+        sceneRef.current.container.destroy({ children: true });
+        sceneRef.current = null;
+      }
+      if (room.createScene) {
+        const scene = room.createScene(app.renderer.width, app.renderer.height);
+        app.stage.addChildAt(scene.container, 0); // behind the beings
+        sceneRef.current = scene;
+      }
+    }
+    setRoomName(room.name);
+    force((n) => n + 1);
+  }
 
   async function respawn() {
     const app = appRef.current;
@@ -80,7 +91,7 @@ function Room() {
     const host = hostRef.current;
     if (!host) return;
     let disposed = false;
-    applyGradient();
+    document.body.style.background = ROOMS[roomIndexRef.current].background(); // avoid flash
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Tab") {
@@ -107,12 +118,14 @@ function Room() {
       worldRef.current = world;
 
       await respawn();
+      enterRoom(roomIndexRef.current); // mount the starting room's scene + tuning
 
       app.ticker.add((ticker) => {
         const beings = beingsRef.current;
         const w = app.renderer.width;
         const h = app.renderer.height;
         const dt = ticker.deltaMS;
+        sceneRef.current?.update(dt, w, h);
         for (const b of beings) b.update(dt, w, h, ticker);
 
         for (let a = 0; a < beings.length; a++) {
@@ -139,9 +152,20 @@ function Room() {
   return (
     <div className="mini-beings-root">
       <div ref={hostRef} className="mini-beings-canvas" />
+      <div className="room-switch">
+        {ROOMS.map((r) => (
+          <button
+            key={r.id}
+            className={r.name === roomName ? "active" : ""}
+            onClick={() => enterRoom(ROOMS.indexOf(r))}
+          >
+            {r.name}
+          </button>
+        ))}
+      </div>
       {!showDebug && (
         <div className="mini-beings-hud">
-          <div className="title">mini-beings</div>
+          <div className="title">{roomName}</div>
           <div className="sub">{count} beings · press Tab to tune</div>
         </div>
       )}
@@ -151,7 +175,7 @@ function Room() {
           count={count}
           rerender={() => force((n) => n + 1)}
           onRespawn={respawn}
-          onGradient={applyGradient}
+          onGradient={applyRoomBg}
         />
       )}
     </div>

@@ -47,6 +47,41 @@ html, body {
   letter-spacing: 0.08em;
 }
 
+/* --- room switcher --- */
+.room-switch {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 16;
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(20, 24, 34, 0.32);
+  border: 1px solid rgba(160, 168, 188, 0.2);
+  backdrop-filter: blur(8px);
+}
+.room-switch button {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(232, 236, 246, 0.78);
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+.room-switch button:hover { color: rgba(255, 255, 255, 0.95); }
+.room-switch button.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* Overlay text adapts to the moon room (dark backdrop). */
+body[data-room="moon"] .mini-beings-hud .title { color: rgba(228, 232, 246, 0.92); }
+body[data-room="moon"] .mini-beings-hud .sub { color: rgba(170, 178, 205, 0.8); }
+
 /* --- Tab debug panel --- */
 .mini-beings-debug {
   position: fixed;
