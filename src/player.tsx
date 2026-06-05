@@ -51,6 +51,10 @@ export function MusicPlayer() {
     analyserRef.current = analyser;
   }, []);
 
+  // Release the Web Audio graph on unmount — browsers cap concurrent
+  // AudioContexts, so a remounted player must not leak the old one.
+  useEffect(() => () => void ctxRef.current?.close().catch(() => {}), []);
+
   const play = useCallback(async () => {
     const a = audioRef.current;
     if (!a) return;
@@ -120,6 +124,7 @@ export function MusicPlayer() {
   // Visualizer — frequency bars driven by the analyser.
   useEffect(() => {
     let raf = 0;
+    let data: Uint8Array | null = null; // allocated once, not per frame
     const canvas = vizRef.current;
     if (!canvas) return;
     const ctx2d = canvas.getContext("2d")!;
@@ -131,7 +136,7 @@ export function MusicPlayer() {
       ctx2d.clearRect(0, 0, w, h);
       if (!analyser) return;
       const bins = analyser.frequencyBinCount;
-      const data = new Uint8Array(bins);
+      if (!data || data.length !== bins) data = new Uint8Array(bins);
       analyser.getByteFrequencyData(data);
       const n = Math.min(bins, 28);
       const gap = 2;
