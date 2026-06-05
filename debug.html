@@ -6,28 +6,53 @@
     <title>lunamachi · component debug</title>
     <style>
       * { margin: 0; box-sizing: border-box; }
-      body { background: #0b0e1a; overflow: hidden; }
+      body {
+        background: #0b0e1a; overflow: hidden;
+        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
       #bar {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 20;
         display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
         padding: 10px 12px;
       }
       #bar button {
-        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
-        color: #cdd6f4; background: #1a1f33; border: 1px solid #2a3150;
+        font: inherit; color: #cdd6f4; background: #1a1f33; border: 1px solid #2a3150;
         padding: 5px 10px; border-radius: 6px; cursor: pointer;
       }
       #bar button:hover { background: #242b45; }
       #bar button.active { background: #3b4a7a; color: #fff; border-color: #5a6aa0; }
-      #label {
-        margin-left: 8px; color: #7a86b0;
-        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
+      #label { margin-left: 8px; color: #7a86b0; }
       canvas { display: block; }
+
+      #inspector {
+        position: fixed; top: 44px; right: 0; bottom: 0; width: 300px; z-index: 10;
+        background: rgba(10, 13, 26, 0.82); backdrop-filter: blur(6px);
+        border-left: 1px solid #1e2438; padding: 12px 14px; overflow: auto;
+        color: #aeb7d6;
+      }
+      #inspector .sec {
+        margin: 14px 0 6px; color: #5f6a92; letter-spacing: 0.08em;
+        text-transform: uppercase; font-size: 10px;
+      }
+      #inspector .sec:first-child { margin-top: 0; }
+      #inspector pre { white-space: pre; font: inherit; color: #cdd6f4; line-height: 1.55; }
+      #insp-tree { color: #9aa6cf; }
+      #inspector .toggle {
+        position: absolute; top: -34px; right: 12px;
+        background: #1a1f33; border: 1px solid #2a3150; color: #cdd6f4;
+        padding: 5px 10px; border-radius: 6px; cursor: pointer; font: inherit;
+      }
     </style>
   </head>
   <body>
     <div id="bar"></div>
+    <aside id="inspector">
+      <button class="toggle" id="insp-toggle" title="toggle inspector (i)">inspector</button>
+      <div class="sec">prop</div>
+      <pre id="insp-prop"></pre>
+      <div class="sec">scene tree</div>
+      <pre id="insp-tree"></pre>
+    </aside>
     <script type="module" src="/src/debug.ts"></script>
   </body>
 </html>
