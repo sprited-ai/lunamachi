@@ -9,6 +9,12 @@ A standalone static app (extracted from `sprite-dx`). Pure client side: Pixi.js
 renders the room, the Web Audio API drives the visualizer, assets are served
 from `public/`. No server/worker needed.
 
+## Design
+
+**No assets — every prop is procedurally generated.** The moon, stars, magic
+circles, floors, glows: all drawn in code, no art files. The only file-based
+content is the AI-generated characters and music. See [PRINCIPLES.md](./PRINCIPLES.md).
+
 ## Develop
 
 ```bash
