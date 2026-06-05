@@ -6,6 +6,9 @@ dist
 # Local secrets for gen:component (Claude API key). Never commit.
 .dev.vars
 
+# Wrangler local state / cache.
+.wrangler/
+
 # Full-size character exports — staging for scripts/optimize-beings.py.
 # Only the optimized public/beings/ are committed.
 public/_raw/
