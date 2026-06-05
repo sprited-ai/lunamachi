@@ -66,7 +66,7 @@ A component is a single self-contained TypeScript file that default-exports a \`
 - \`tag\`: PascalCase, used as the XML element (e.g. "Aurora").
 - \`type\`: the kebab/camel discriminant string (e.g. "aurora").
 - \`parse(el)\`: read the element's attributes (via the coerce helpers) into a typed prop object whose first field is \`type\`.
-- \`mount(prop, ctx)\`: build the visuals into \`ctx.container\` and return a \`SceneUpdate\` (a per-frame \`(dtMs, w, h) => void\`). For ALL randomness use \`ctx.rng()\` (the room's seeded stream) — never Math.random — so the room is reproducible from its seed.
+- \`mount(prop, ctx)\`: build the visuals into \`ctx.container\` and return a \`SceneUpdate\` (a per-frame \`(dtMs, w, h) => void\`). For ALL randomness use \`ctx.rng()\` (the room's seeded stream) — never Math.random — so the room is reproducible from its seed. Call \`ctx.rng()\` ONLY at mount (placement/setup). If you need randomness inside the per-frame update (e.g. respawning particles), draw one seed at mount and make a PRIVATE stream — \`const r = mulberry32((ctx.rng() * 0x100000000) >>> 0)\` — and use \`r()\` in the update; never call \`ctx.rng()\` inside the update closure (it is shared across props, and consuming it per-frame breaks the seed → layout guarantee).
 
 You MAY import the shared primitives from "../shared" (addMoon/addStarField/addFireflies/combine/mulberry32) and the attribute coercers from "../coerce" (attr/opt/int/num/pair/hex), and Pixi's { Container, Graphics } from "pixi.js". Define the prop's own interface (extends Prop) inside the file and cast inside mount. Keep it tasteful and atmospheric — soft alphas, gentle motion, nothing garish.
 
