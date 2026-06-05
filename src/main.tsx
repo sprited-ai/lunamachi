@@ -25,6 +25,35 @@ function roomIndexFromPath(): number {
   return i >= 0 ? i : 0;
 }
 
+const BEING_SEED = 1337;
+
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const a = arr.slice();
+  let s = seed >>> 0;
+  const rand = () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Give each room its own disjoint slice of the (shuffled) character pool, so
+ *  every room is inhabited by a different cast. Within a room the cast is cycled
+ *  to reach its population. */
+function partitionByRoom(all: BeingMeta[], nRooms: number): BeingMeta[][] {
+  const shuffled = seededShuffle(all, BEING_SEED);
+  const per = Math.max(1, Math.floor(shuffled.length / nRooms));
+  return Array.from({ length: nRooms }, (_, i) =>
+    i === nRooms - 1 ? shuffled.slice(i * per) : shuffled.slice(i * per, (i + 1) * per),
+  );
+}
+
 function Room() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -34,6 +63,8 @@ function Room() {
   const worldRef = useRef<Container | null>(null);
   const beingsRef = useRef<Being[]>([]);
   const metaRef = useRef<BeingMeta[]>([]);
+  const ownedRef = useRef<BeingMeta[][]>([]); // per-room character sets
+  const respawnTokenRef = useRef(0);
   const roomIndexRef = useRef(0);
   const sceneRef = useRef<Scene | null>(null);
   const [roomName, setRoomName] = useState(ROOMS[0].name);
@@ -47,7 +78,7 @@ function Room() {
   function enterRoom(i: number, nav: "push" | "replace" | "none" = "push") {
     roomIndexRef.current = i;
     const room = ROOMS[i];
-    Object.assign(cfg, room.tuning); // never includes population — crowd persists
+    Object.assign(cfg, room.tuning); // includes population — each room has its own cast
     document.body.dataset.room = room.id; // lets CSS adapt overlay text to the mood
     applyRoomBg();
     const app = appRef.current;
@@ -68,26 +99,36 @@ function Room() {
     else if (nav === "replace") history.replaceState({}, "", path);
     setRoomName(room.name);
     document.title = `${room.name} · lunamachi`;
+    void respawn(); // swap in this room's cast
     force((n) => n + 1);
   }
 
+  // Repopulate the world with the current room's cast. Guarded by a token so a
+  // slow load from a previous room can't clobber a newer one; the old crowd
+  // stays on screen until the new one is ready (no empty flash).
   async function respawn() {
     const app = appRef.current;
     const world = worldRef.current;
     if (!app || !world) return;
-    for (const b of beingsRef.current) b.container.destroy({ children: true });
-    world.removeChildren();
+    const token = ++respawnTokenRef.current;
 
-    const meta = metaRef.current;
+    const cast = ownedRef.current[roomIndexRef.current] ?? metaRef.current;
+    if (!cast.length) return;
     const created = await Promise.all(
       Array.from({ length: cfg.population }, (_, i) => {
-        const m = meta[i % meta.length];
+        const m = cast[i % cast.length];
         return Being.create(ASSETS, m.id, { hasRef: !!m.ref }).catch((e) => {
           console.warn(`[mini-beings] load ${m.id} failed:`, e);
           return null;
         });
       }),
     );
+    if (token !== respawnTokenRef.current) {
+      created.forEach((b) => b?.container.destroy({ children: true })); // stale — drop
+      return;
+    }
+    for (const b of beingsRef.current) b.container.destroy({ children: true });
+    world.removeChildren();
     const beings = created.filter((b): b is Being => b !== null);
     const W = app.renderer.width;
     const H = app.renderer.height;
@@ -123,6 +164,7 @@ function Room() {
       const index: { beings: BeingMeta[] } = await fetch(`${BEINGS_URL}/beings.json`).then((r) => r.json());
       if (!index.beings.length) throw new Error("no beings in index");
       metaRef.current = index.beings;
+      ownedRef.current = partitionByRoom(index.beings, ROOMS.length); // each room its own cast
 
       const app = new Application();
       await app.init({ backgroundAlpha: 0, resizeTo: window, antialias: false });
@@ -135,8 +177,7 @@ function Room() {
       app.stage.addChild(world);
       worldRef.current = world;
 
-      await respawn();
-      enterRoom(roomIndexRef.current, "replace"); // mount scene + canonicalize the URL
+      enterRoom(roomIndexRef.current, "replace"); // mount scene + cast + canonicalize URL
 
       app.ticker.add((ticker) => {
         const beings = beingsRef.current;

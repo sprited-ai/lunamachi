@@ -39,6 +39,7 @@ function whiteBackground(): string {
 }
 
 const WHITE_TUNING: Partial<Config> = {
+  population: 100,
   speed: 75, poseChance: 0.2, greetChance: 0.13, shadow: 0.7,
   floorTop: 0.56, floorBottom: 0.95, horizon: 0.56, height: 128,
 };
@@ -64,6 +65,7 @@ function nightBackground(): string {
 // Calmer behaviour: slower, more still poses, softer night shadows, beings
 // gathered a touch lower under the moon.
 const MOON_TUNING: Partial<Config> = {
+  population: 70,
   speed: 32, poseChance: 0.42, greetChance: 0.16, shadow: 0.34,
   floorTop: 0.62, floorBottom: 0.96, height: 120,
 };
