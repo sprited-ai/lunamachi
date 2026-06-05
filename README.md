@@ -15,6 +15,38 @@ from `public/`. No server/worker needed.
 circles, floors, glows: all drawn in code, no art files. The only file-based
 content is the AI-generated characters and music. See [PRINCIPLES.md](./PRINCIPLES.md).
 
+## Rooms & components
+
+Each room is a declarative XML file in `src/rooms/` — its palette, mood, tuning,
+and the procedural props it composes:
+
+```xml
+<Room id="moon" name="summer moon" accent="#b6a4ff" seed="7">
+  <Vibe>watching a big beautiful moon together on a warm summer night</Vibe>
+  <Palette skyTop="#070b1e" skyMid="#141b3c" horizon="#1d2550" ground="#14182f"/>
+  <Moon at="0.72,0.2"/> <StarField count="110"/> <Fireflies count="16"/>
+  <Aurora/> <MagicCircle/>
+</Room>
+```
+
+`<Moon/>`, `<StarField/>`, `<Aurora/>`, `<FirstSnow/>` … are **components**: a
+growing vocabulary of procedural props, each a self-contained file under
+`src/rooms/components/`, drawn in code. A component can be written by hand or
+**generated from a prompt**:
+
+```bash
+npm run gen:component -- "drifting aurora ribbons" --room moon
+```
+
+Claude authors the procedural component, wires its `<Tag/>` into the room, and
+gates on a clean build (retrying on errors). Adding a room is just data: drop
+`<id>.room.xml` and add its id to `rooms.manifest.json`. See
+[src/rooms/README.md](./src/rooms/README.md) for the full contract and
+[CONTRIBUTING.md](./CONTRIBUTING.md) to add your own.
+
+Rooms so far: `white` · `moon` · `fireflies` · `snow` · `rain` — travel between
+them through the magic circle on the floor, or by URL.
+
 ## Develop
 
 ```bash
@@ -24,7 +56,8 @@ npm run build    # → dist/  (static; deploy on Cloudflare Pages / any static h
 ```
 
 Press **Tab** in the room for a debug HUD (size, perspective, floor, shadow,
-speed, pose/greet chance, population).
+speed, pose/greet chance, population). Open **`/debug.html`** to inspect each
+registered component in isolation (handy when authoring or generating one).
 
 ## Assets
 
