@@ -5,13 +5,17 @@
 
 import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Application, Container } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { Being } from "./being";
 import { cfg } from "./config";
 import { MusicPlayer } from "./player";
 import { ROOMS, type Scene } from "./rooms";
 import { createPortal, type Portal } from "./portal";
+import { Hierarchy } from "./debug-hierarchy";
+import { SummonChrome, runSummon, createMockClient, type SummonVariant, type SummonResult } from "./summon-prototype";
+import { createRemoteClient } from "./sprite-dx-client";
 import "./global.css";
+import "./debug-editor.css";
 
 const BEINGS_URL = "";
 const ASSETS = `${BEINGS_URL}/beings`;
@@ -27,6 +31,17 @@ function roomIndexFromPath(): number {
 }
 
 const BEING_SEED = 1337;
+
+// PROTOTYPE verdict: Seed Hatch (B) won — locked in, switcher removed.
+const SUMMON_VARIANT: SummonVariant = "B";
+
+// PROTOTYPE: summon is opt-in. Off by default — it isn't a real feature yet, so
+// the ambient room stays clean; add ?summon (or ?summon=1) to reveal it, ?summon=0
+// to force it off. Still DEV-gated at the call site so it can never ship.
+function summonEnabled(): boolean {
+  const v = new URLSearchParams(window.location.search).get("summon");
+  return v !== null && v !== "0" && v !== "false";
+}
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const a = arr.slice();
@@ -55,6 +70,19 @@ function partitionByRoom(all: BeingMeta[], nRooms: number): BeingMeta[][] {
   );
 }
 
+/** The being under a stage-space point (frontmost — highest y — wins). Used by
+ *  the editor's click-to-select; hit-tests rendered bounds so it's pixel-honest. */
+function pickBeing(beings: Being[], px: number, py: number): Being | null {
+  let best: Being | null = null;
+  for (const b of beings) {
+    const r = b.container.getBounds();
+    if (px >= r.x && px <= r.x + r.width && py >= r.y && py <= r.y + r.height) {
+      if (!best || b.y > best.y) best = b;
+    }
+  }
+  return best;
+}
+
 function Room() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -71,8 +99,25 @@ function Room() {
   const portalRef = useRef<Portal | null>(null);
   const [roomName, setRoomName] = useState(ROOMS[0].name);
 
+  // editor: click-to-select. selectedRef = the picked display object (canvas pick
+  // or hierarchy click share it); selG = its outline.
+  const selectedRef = useRef<Container | null>(null);
+  const selGRef = useRef<Graphics | null>(null);
+  const showDebugRef = useRef(false);
+  const [, setSelTick] = useState(0);
+
+  // PROTOTYPE: summon is opt-in via ?summon (off by default). Manifestation is
+  // locked to Seed Hatch; summonRef is a lazy summon fn the chrome calls.
+  const [summonOn] = useState(summonEnabled);
+  const variantRef = useRef<SummonVariant>(SUMMON_VARIANT);
+  const summonRef = useRef<((p: string) => Promise<SummonResult>) | null>(null);
+
   const applyRoomBg = () => {
-    document.body.style.background = ROOMS[roomIndexRef.current].background();
+    const bg = ROOMS[roomIndexRef.current].background();
+    document.body.style.background = bg;
+    // the editor shrinks the canvas to a cell; paint the room gradient on the host
+    // too so the transparent canvas shows the room (not a black viewport).
+    if (hostRef.current) hostRef.current.style.background = bg;
   };
 
   // nav: how to reflect the room in the URL — 'push' (user click, new history
@@ -96,8 +141,8 @@ function Room() {
         sceneRef.current = scene;
       }
     }
-    const path = `/${room.id}`;
-    if (nav === "push" && window.location.pathname !== path) history.pushState({}, "", path);
+    const path = `/${room.id}${window.location.search}`; // keep ?variant= (prototype) across room nav
+    if (nav === "push" && window.location.pathname !== `/${room.id}`) history.pushState({}, "", path);
     else if (nav === "replace") history.replaceState({}, "", path);
     // The portal hints its destination with that room's accent colour.
     portalRef.current?.setColor(ROOMS[(i + 1) % ROOMS.length].accent);
@@ -171,7 +216,7 @@ function Room() {
       ownedRef.current = partitionByRoom(index.beings, ROOMS.length); // each room its own cast
 
       const app = new Application();
-      await app.init({ backgroundAlpha: 0, resizeTo: window, antialias: false });
+      await app.init({ backgroundAlpha: 0, resizeTo: host, antialias: false });
       if (disposed) return app.destroy(true);
       host.appendChild(app.canvas);
       appRef.current = app;
@@ -179,6 +224,7 @@ function Room() {
       const world = new Container();
       world.sortableChildren = true;
       world.eventMode = "none"; // beings don't intercept clicks → portal stays tappable
+      world.label = "world";
       app.stage.addChild(world);
       worldRef.current = world;
 
@@ -186,7 +232,47 @@ function Room() {
       // clickable (beings are non-interactive). Tapping it travels to the next room.
       const portal = createPortal(() => enterRoom((roomIndexRef.current + 1) % ROOMS.length));
       app.stage.addChildAt(portal.container, 0); // below world; enterRoom inserts scene under it
+      portal.container.label = "portal";
       portalRef.current = portal;
+
+      // editor selection outline — drawn on top, follows the picked being each frame
+      const selG = new Graphics();
+      selG.eventMode = "none";
+      selG.visible = false;
+      app.stage.addChild(selG);
+      selGRef.current = selG;
+
+      // The generation contract. Default = mock (works under plain `npm run dev`).
+      // `?real` routes to our OWN same-origin Worker (src/worker.ts), which holds
+      // the sprite-dx api-key and proxies to /api/characters — so the browser
+      // never carries a key. (`?real` needs `wrangler dev` + sprite-dx live.)
+      const useRealBackend = new URLSearchParams(window.location.search).has("real");
+      const summonClient = useRealBackend
+        ? createRemoteClient({ baseUrl: "", apiKey: "" }) // key injected by the Worker
+        : createMockClient({
+            assetBase: ASSETS,
+            pickLocal: () => {
+              const c = metaRef.current;
+              return c.length ? c[Math.floor(Math.random() * c.length)] : undefined;
+            },
+          });
+
+      // PROTOTYPE: wire the summon entry point now that app/world exist.
+      summonRef.current = (prompt: string) => {
+        const a = appRef.current;
+        const w = worldRef.current;
+        if (!a || !w) return Promise.resolve({ ok: false });
+        return runSummon(prompt, {
+          app: a,
+          world: w,
+          variant: () => variantRef.current,
+          client: summonClient,
+          onLive: (b) => {
+            beingsRef.current = [...beingsRef.current, b];
+            setCount(beingsRef.current.length);
+          },
+        });
+      };
 
       enterRoom(roomIndexRef.current, "replace"); // mount scene + cast + canonicalize URL
 
@@ -198,6 +284,23 @@ function Room() {
         sceneRef.current?.update(dt, w, h);
         portal.update(dt, w, h, w * 0.5, h * 0.75);
         for (const b of beings) b.update(dt, w, h, ticker);
+
+        // keep the selection outline on the picked being
+        const selG2 = selGRef.current;
+        if (selG2) {
+          const sel = selectedRef.current;
+          if (sel && showDebugRef.current) {
+            const r = sel.getBounds();
+            selG2
+              .clear()
+              .rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4)
+              .stroke({ width: 1.5, color: 0xffd24a, alpha: 0.95 });
+            selG2.visible = true;
+          } else if (selG2.visible) {
+            selG2.clear();
+            selG2.visible = false;
+          }
+        }
 
         for (let a = 0; a < beings.length; a++) {
           for (let b = a + 1; b < beings.length; b++) {
@@ -221,88 +324,96 @@ function Room() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // entering/leaving the editor changes the canvas host size → resize the renderer
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    const id = requestAnimationFrame(() => app.resize());
+    return () => cancelAnimationFrame(id);
+  }, [showDebug]);
+
+  // editor: click-to-select. While in the editor the portal nav is muted (clicks
+  // pick a being instead), the inspector ticks for live values, and a pointerdown
+  // on the canvas selects the topmost being under the cursor (empty space clears).
+  useEffect(() => {
+    showDebugRef.current = showDebug;
+    const app = appRef.current;
+    if (portalRef.current) portalRef.current.container.eventMode = showDebug ? "none" : "static";
+    if (!app || !showDebug) {
+      selectedRef.current = null;
+      return;
+    }
+    const canvas = app.canvas;
+    const onDown = (e: PointerEvent) => {
+      const hit = pickBeing(beingsRef.current, e.offsetX, e.offsetY);
+      selectedRef.current = hit ? hit.container : null;
+      setSelTick((n) => n + 1);
+    };
+    canvas.addEventListener("pointerdown", onDown);
+    const tick = window.setInterval(() => setSelTick((n) => n + 1), 300);
+    return () => {
+      canvas.removeEventListener("pointerdown", onDown);
+      clearInterval(tick);
+    };
+  }, [showDebug]);
+
   return (
-    <div className="mini-beings-root">
+    <div className="mini-beings-root" data-debug={showDebug || undefined}>
       <div ref={hostRef} className="mini-beings-canvas" />
       {!showDebug && (
         <div className="mini-beings-hud">
           <div className="title">{roomName}</div>
-          <div className="sub">{count} beings · press Tab to tune</div>
+          <div className="sub">{count} beings · press Tab for editor</div>
         </div>
       )}
-      <MusicPlayer />
-      {showDebug && (
-        <DebugPanel
-          count={count}
-          rerender={() => force((n) => n + 1)}
-          onRespawn={respawn}
-          onGradient={applyRoomBg}
+      {!showDebug && <MusicPlayer />}
+      {summonOn && !showDebug && (
+        <SummonChrome
+          onSummon={(p) => summonRef.current?.(p) ?? Promise.resolve({ ok: false })}
         />
       )}
-    </div>
-  );
-}
-
-function DebugPanel({
-  count,
-  rerender,
-  onRespawn,
-  onGradient,
-}: {
-  count: number;
-  rerender: () => void;
-  onRespawn: () => void;
-  onGradient: () => void;
-}) {
-  const set = (patch: Partial<typeof cfg>, opts?: { gradient?: boolean }) => {
-    Object.assign(cfg, patch);
-    if (opts?.gradient) onGradient();
-    rerender();
-  };
-
-  const Slider = ({
-    label, value, min, max, step, on,
-  }: { label: string; value: number; min: number; max: number; step: number; on: (v: number) => void }) => (
-    <label className="row">
-      <span>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => on(Number(e.target.value))} />
-      <b>{Number.isInteger(step) ? value : value.toFixed(2)}</b>
-    </label>
-  );
-
-  return (
-    <div className="mini-beings-debug">
-      <div className="hd">mini-beings · debug <span>{count} beings</span></div>
-
-      <label className="row check">
-        <input type="checkbox" checked={cfg.uniformSize}
-          onChange={(e) => set({ uniformSize: e.target.checked })} />
-        <span>uniform size (ignore perspective)</span>
-      </label>
-
-      {cfg.uniformSize ? (
-        <Slider label="height" value={cfg.height} min={30} max={260} step={1} on={(v) => set({ height: v })} />
-      ) : (
+      {showDebug && (
         <>
-          <Slider label="min height" value={cfg.minHeight} min={20} max={200} step={1} on={(v) => set({ minHeight: v })} />
-          <Slider label="max height" value={cfg.maxHeight} min={40} max={320} step={1} on={(v) => set({ maxHeight: v })} />
+          <div className="dbg-bar">
+            <span className="dot">●</span>
+            <b>{roomName}</b>
+            <span className="dot">{count} beings</span>
+            <span className="spacer" />
+            <span className="dot">Tab to exit</span>
+          </div>
+          <aside className="dbg-panel dbg-hierarchy">
+            <div className="hd">Hierarchy</div>
+            <Hierarchy
+              getRoots={() => (appRef.current?.stage.children as Container[]) ?? []}
+              selectedUid={selectedRef.current?.uid ?? null}
+              onSelect={(c) => {
+                selectedRef.current = c;
+                setSelTick((n) => n + 1);
+              }}
+            />
+          </aside>
+          <aside className="dbg-panel dbg-inspector">
+            <div className="hd">Inspector</div>
+            {selectedRef.current ? (
+              <div className="dbg-kv">
+                <span>node</span><b>{selectedRef.current.label || selectedRef.current.constructor?.name || "Object"}</b>
+                <span>x</span><b>{selectedRef.current.x | 0}</b>
+                <span>y</span><b>{selectedRef.current.y | 0}</b>
+                <span>α</span><b>{(selectedRef.current.alpha ?? 1).toFixed(2)}</b>
+                <span>children</span><b>{(selectedRef.current.children as Container[]).length}</b>
+              </div>
+            ) : (
+              <div className="dbg-kv">
+                <span>room</span><b>{roomName}</b>
+                <span>beings</span><b>{count}</b>
+                <span>population</span><b>{cfg.population}</b>
+                <span>height</span><b>{cfg.height}</b>
+                <span>speed</span><b>{cfg.speed}</b>
+              </div>
+            )}
+          </aside>
         </>
       )}
-
-      <Slider label="horizon ↕" value={cfg.horizon} min={0.3} max={0.85} step={0.01}
-        on={(v) => set({ horizon: v, floorTop: v }, { gradient: true })} />
-      <Slider label="floor bottom" value={cfg.floorBottom} min={0.6} max={1} step={0.01} on={(v) => set({ floorBottom: v })} />
-      <Slider label="shadow" value={cfg.shadow} min={0} max={1.4} step={0.05} on={(v) => set({ shadow: v })} />
-      <Slider label="speed" value={cfg.speed} min={10} max={200} step={5} on={(v) => set({ speed: v })} />
-      <Slider label="pose %" value={cfg.poseChance} min={0} max={0.8} step={0.02} on={(v) => set({ poseChance: v })} />
-      <Slider label="greet %" value={cfg.greetChance} min={0} max={0.6} step={0.02} on={(v) => set({ greetChance: v })} />
-
-      <Slider label="population" value={cfg.population} min={1} max={320} step={1} on={(v) => set({ population: v })} />
-      <div className="btns">
-        <button type="button" onClick={onRespawn}>respawn {cfg.population}</button>
-      </div>
-      <div className="ft">Tab to close</div>
     </div>
   );
 }

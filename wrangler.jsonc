@@ -1,14 +1,27 @@
 {
-  // Static-asset-only Worker (no server code) — serves the built SPA from dist/.
-  // SPA fallback for room paths (/white, /moon, …) is done here, NOT via a
-  // _redirects catch-all (which Workers Assets rejects as an infinite loop).
+  // Worker (src/worker.ts) that fronts a few /api routes (thin proxy to sprite-dx,
+  // holding the api-key server-side) and serves the built SPA from dist/ for
+  // everything else. SPA fallback for room paths (/white, /moon, …) is handled by
+  // the Assets binding, NOT a _redirects catch-all (Workers Assets rejects that).
   "name": "lunamachi",
   "compatibility_date": "2025-06-01",
+  "main": "src/worker.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
   "routes": [
     { "pattern": "lunamachi.sprited.ai", "custom_domain": true }
-  ]
+  ],
+  "kv_namespaces": [
+    { "binding": "SUMMON_KV", "id": "98874e61446f485181bf3076099ef55d" }
+  ],
+  "vars": {
+    // Soft daily caps for the (anonymous, free) summon endpoint.
+    "SUMMON_IP_CAP": "5",
+    "SUMMON_DAILY_CAP": "100"
+  }
+  // Secret (set out-of-band, never committed): SPRITEDX_API_KEY
+  // Var (kill switch, default off): SUMMON_ENABLED — set "1" to enable summon.
 }

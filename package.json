@@ -12,6 +12,7 @@
     "gen:particle": "node scripts/gen-particle.mjs"
   },
   "dependencies": {
+    "pixi-filters": "^6.1.5",
     "pixi.js": "^8.14.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

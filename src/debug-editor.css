@@ -1,0 +1,105 @@
+/* Unity-like debug editor. Normally the canvas is fullscreen; when the root gets
+   [data-debug], the layout becomes a docked grid — toolbar on top, Hierarchy +
+   shrunken Scene view + Inspector — and the Pixi canvas resizes to the centre cell. */
+
+/* Canvas fills its host. The host is fullscreen normally, a grid cell in debug. */
+.mini-beings-canvas {
+  position: fixed;
+  inset: 0;
+}
+.mini-beings-canvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mini-beings-root[data-debug] {
+  display: grid;
+  grid-template-columns: 240px 1fr 264px;
+  grid-template-rows: 36px 1fr;
+  grid-template-areas:
+    "bar bar bar"
+    "hierarchy view inspector";
+  background: #0d1018;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.mini-beings-root[data-debug] .mini-beings-canvas {
+  position: relative;
+  inset: auto;
+  grid-area: view;
+  margin: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #05070d;
+  box-shadow: inset 0 0 0 1px #20283f;
+}
+
+.dbg-bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  color: #cdd6f4;
+  background: #11151f;
+  border-bottom: 1px solid #1b2236;
+}
+.dbg-bar b { font-weight: 600; }
+.dbg-bar .dot { color: #6b769c; }
+.dbg-bar .spacer { flex: 1; }
+
+.dbg-panel {
+  background: #0f131d;
+  overflow: auto;
+  color: #aeb7d6;
+}
+.dbg-panel .hd {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 12px;
+  color: #6b769c;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  background: #11151f;
+  border-bottom: 1px solid #1b2236;
+}
+.dbg-hierarchy { grid-area: hierarchy; border-right: 1px solid #1b2236; }
+.dbg-inspector { grid-area: inspector; border-left: 1px solid #1b2236; }
+
+.dbg-panel pre {
+  margin: 0;
+  padding: 8px 12px;
+  white-space: pre;
+  line-height: 1.55;
+  color: #9aa6cf;
+}
+.dbg-kv {
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+}
+.dbg-kv span { color: #6b769c; }
+.dbg-kv b { color: #cdd6f4; font-weight: 600; text-align: right; }
+
+/* interactive hierarchy tree */
+.dbg-tree { padding: 4px 0 12px; }
+.dbg-row {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  padding: 1px 8px 1px 0;
+  white-space: nowrap;
+  color: #9aa6cf;
+  cursor: default;
+}
+.dbg-row:hover { background: #161c2e; }
+.dbg-row.sel { background: #2a3658; color: #fff; }
+.dbg-row .tw { width: 12px; flex: none; text-align: center; color: #5f6a92; cursor: pointer; }
+.dbg-row.sel .tw { color: #aab6e0; }
+.dbg-row .ct { color: #5f6a92; }
+.dbg-row.sel .ct { color: #9fb0e8; }

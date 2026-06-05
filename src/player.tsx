@@ -29,6 +29,11 @@ export function MusicPlayer() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const vizRef = useRef<HTMLCanvasElement>(null);
 
+  // Cross-tab coordination so only ONE tab plays at a time (no doubled audio).
+  const chRef = useRef<BroadcastChannel | null>(null);
+  const tabIdRef = useRef(`t${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
+  const othersPlayingRef = useRef(false);
+
   useEffect(() => {
     fetch(`${MUSIC_URL}/playlist.json`)
       .then((r) => r.json())
@@ -55,6 +60,36 @@ export function MusicPlayer() {
   // AudioContexts, so a remounted player must not leak the old one.
   useEffect(() => () => void ctxRef.current?.close().catch(() => {}), []);
 
+  // Only one tab plays at a time: a tab announces "playing"/"stopped"; a playing
+  // tab yields (pauses) when another starts, and a fresh tab polls on mount and
+  // won't auto-start if another tab is already playing.
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const ch = new BroadcastChannel("mini-beings.music");
+    chRef.current = ch;
+    const me = tabIdRef.current;
+    ch.onmessage = (e: MessageEvent) => {
+      const m = e.data as { type?: string; tab?: string } | null;
+      if (!m || m.tab === me) return;
+      if (m.type === "playing") {
+        othersPlayingRef.current = true;
+        const a = audioRef.current;
+        if (a && !a.paused) { a.pause(); setPlaying(false); } // newest tab wins
+      } else if (m.type === "stopped") {
+        othersPlayingRef.current = false;
+      } else if (m.type === "poll") {
+        const a = audioRef.current;
+        if (a && !a.paused) ch.postMessage({ type: "playing", tab: me });
+      }
+    };
+    ch.postMessage({ type: "poll", tab: me }); // ask who's already playing
+    const onHide = () => {
+      if (audioRef.current && !audioRef.current.paused) ch.postMessage({ type: "stopped", tab: me });
+    };
+    window.addEventListener("pagehide", onHide);
+    return () => { window.removeEventListener("pagehide", onHide); ch.close(); chRef.current = null; };
+  }, []);
+
   const play = useCallback(async () => {
     const a = audioRef.current;
     if (!a) return;
@@ -64,6 +99,7 @@ export function MusicPlayer() {
       await a.play();
       setPlaying(true);
       localStorage.setItem(ON_KEY, "1");
+      chRef.current?.postMessage({ type: "playing", tab: tabIdRef.current }); // others yield
     } catch (e) {
       console.warn("[mini-beings] play blocked:", e);
     }
@@ -73,6 +109,7 @@ export function MusicPlayer() {
     audioRef.current?.pause();
     setPlaying(false);
     localStorage.setItem(ON_KEY, "0");
+    chRef.current?.postMessage({ type: "stopped", tab: tabIdRef.current });
   }, []);
 
   const next = useCallback(() => setIndex((i) => (tracks.length ? (i + 1) % tracks.length : 0)), [tracks.length]);
@@ -100,6 +137,7 @@ export function MusicPlayer() {
   useEffect(() => {
     if (!tracks.length) return;
     if (localStorage.getItem(ON_KEY) === "0") return; // paused last visit — respect it
+    if (othersPlayingRef.current) return; // another tab already plays — don't double up
     let started = false;
     const remove = () => {
       window.removeEventListener("pointerdown", start);
