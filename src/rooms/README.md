@@ -96,5 +96,17 @@ the target room, and gates on a clean `npm run build`; on failure it feeds the
 build errors back and retries, else reverts. Add `--commit` to push to `main`,
 `--deploy` to ship. A reproducible recipe (prompt + model + date) is stamped into
 the file header. Needs `ANTHROPIC_API_KEY` in `.dev.vars` (see `.dev.vars.example`).
-The same generator brain is runtime-agnostic, so it can later sit behind a Worker
-endpoint for in-game summoning.
+
+**Two generation paths — code vs data:**
+
+```
+npm run gen:component -- "<vibe>" --room <id>   # code-gen: a new component .ts
+npm run gen:particle  -- "<vibe>" --room <id>   # data-gen: a <Particles .../> config
+```
+
+`gen:component` writes a procedural **code** component (build-gated, can self-repair)
+— the escape hatch for shapes a particle system can't express. `gen:particle` asks
+the model for a `<Particles .../>` element (**data** conforming to the existing
+component's schema) and injects it — no new file, no build gate, no self-repair,
+because the engine already renders any valid config. Data-gen is safe and instant,
+and the same call could run in-app (it never produces code to compile).
