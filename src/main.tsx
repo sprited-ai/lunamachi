@@ -18,6 +18,13 @@ const GREET_DISTANCE = 24;
 
 interface BeingMeta { id: string; seed: number | null; ref?: boolean }
 
+/** Room index from the URL path (/<id>); defaults to the first room. */
+function roomIndexFromPath(): number {
+  const id = window.location.pathname.replace(/^\/+/, "").split("/")[0];
+  const i = ROOMS.findIndex((r) => r.id === id);
+  return i >= 0 ? i : 0;
+}
+
 function Room() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -35,7 +42,9 @@ function Room() {
     document.body.style.background = ROOMS[roomIndexRef.current].background();
   };
 
-  function enterRoom(i: number) {
+  // nav: how to reflect the room in the URL — 'push' (user click, new history
+  // entry), 'replace' (canonicalize on load), 'none' (already navigated, e.g. back).
+  function enterRoom(i: number, nav: "push" | "replace" | "none" = "push") {
     roomIndexRef.current = i;
     const room = ROOMS[i];
     Object.assign(cfg, room.tuning); // never includes population — crowd persists
@@ -54,7 +63,11 @@ function Room() {
         sceneRef.current = scene;
       }
     }
+    const path = `/${room.id}`;
+    if (nav === "push" && window.location.pathname !== path) history.pushState({}, "", path);
+    else if (nav === "replace") history.replaceState({}, "", path);
     setRoomName(room.name);
+    document.title = `${room.name} · lunamachi`;
     force((n) => n + 1);
   }
 
@@ -91,6 +104,8 @@ function Room() {
     const host = hostRef.current;
     if (!host) return;
     let disposed = false;
+    roomIndexRef.current = roomIndexFromPath(); // start on the room in the URL
+    document.body.dataset.room = ROOMS[roomIndexRef.current].id;
     document.body.style.background = ROOMS[roomIndexRef.current].background(); // avoid flash
 
     const onKey = (e: KeyboardEvent) => {
@@ -100,6 +115,9 @@ function Room() {
       }
     };
     window.addEventListener("keydown", onKey);
+
+    const onPop = () => enterRoom(roomIndexFromPath(), "none"); // back/forward
+    window.addEventListener("popstate", onPop);
 
     (async () => {
       const index: { beings: BeingMeta[] } = await fetch(`${BEINGS_URL}/beings.json`).then((r) => r.json());
@@ -118,7 +136,7 @@ function Room() {
       worldRef.current = world;
 
       await respawn();
-      enterRoom(roomIndexRef.current); // mount the starting room's scene + tuning
+      enterRoom(roomIndexRef.current, "replace"); // mount scene + canonicalize the URL
 
       app.ticker.add((ticker) => {
         const beings = beingsRef.current;
@@ -144,6 +162,7 @@ function Room() {
     return () => {
       disposed = true;
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPop);
       appRef.current?.destroy(true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

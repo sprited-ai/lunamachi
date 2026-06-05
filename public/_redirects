@@ -1,0 +1,3 @@
+# SPA fallback: serve the app for room paths (/white, /moon, …). Real assets
+# (/beings/*, /music/*) are matched first and served directly.
+/*  /index.html  200
