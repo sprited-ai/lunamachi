@@ -5,7 +5,8 @@
 
 import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, type Renderer } from "pixi.js";
+import { OutlineFilter } from "pixi-filters";
 import { Being } from "./being";
 import { cfg } from "./config";
 import { MusicPlayer } from "./player";
@@ -70,17 +71,35 @@ function partitionByRoom(all: BeingMeta[], nRooms: number): BeingMeta[][] {
   );
 }
 
-/** The being under a stage-space point (frontmost — highest y — wins). Used by
- *  the editor's click-to-select; hit-tests rendered bounds so it's pixel-honest. */
-function pickBeing(beings: Being[], px: number, py: number): Being | null {
-  let best: Being | null = null;
-  for (const b of beings) {
-    const r = b.container.getBounds();
-    if (px >= r.x && px <= r.x + r.width && py >= r.y && py <= r.y + r.height) {
-      if (!best || b.y > best.y) best = b;
-    }
+// Unity-style selection outline — an orange silhouette traced around the
+// selected node's actual shape (not a bounding box).
+const OUTLINE = new OutlineFilter({ thickness: 3, color: 0xffb030, alpha: 1, quality: 0.25 });
+
+/** Alpha (0–255) of the rendered pixel under a stage-space point, for one node. */
+function pixelAlpha(renderer: Renderer, node: Container, px: number, py: number): number {
+  const r = node.getBounds();
+  if (r.width <= 0 || r.height <= 0) return 0;
+  try {
+    const { pixels, width, height } = renderer.extract.pixels(node);
+    const lx = Math.min(width - 1, Math.max(0, Math.floor(((px - r.x) / r.width) * width)));
+    const ly = Math.min(height - 1, Math.max(0, Math.floor(((py - r.y) / r.height) * height)));
+    return pixels[(ly * width + lx) * 4 + 3];
+  } catch {
+    return 255; // extract unavailable → treat the bounds hit as a hit
   }
-  return best;
+}
+
+/** The being under a stage-space point — frontmost (highest y) first, confirmed by
+ *  the sprite's actual pixel alpha so transparent areas of a cell don't catch. */
+function pickBeing(beings: Being[], px: number, py: number, renderer: Renderer): Being | null {
+  const cands = beings
+    .filter((b) => {
+      const r = b.container.getBounds();
+      return px >= r.x && px <= r.x + r.width && py >= r.y && py <= r.y + r.height;
+    })
+    .sort((a, b) => b.y - a.y);
+  for (const b of cands) if (pixelAlpha(renderer, b.container, px, py) > 60) return b;
+  return null;
 }
 
 function Room() {
@@ -100,11 +119,19 @@ function Room() {
   const [roomName, setRoomName] = useState(ROOMS[0].name);
 
   // editor: click-to-select. selectedRef = the picked display object (canvas pick
-  // or hierarchy click share it); selG = its outline.
+  // and hierarchy click share it); selection shows the Unity-style outline filter.
   const selectedRef = useRef<Container | null>(null);
-  const selGRef = useRef<Graphics | null>(null);
   const showDebugRef = useRef(false);
   const [, setSelTick] = useState(0);
+
+  // Move the outline filter onto the newly-selected node (off the previous one).
+  const select = (node: Container | null) => {
+    const prev = selectedRef.current;
+    if (prev && prev !== node) prev.filters = [];
+    selectedRef.current = node;
+    if (node) node.filters = [OUTLINE];
+    setSelTick((n) => n + 1);
+  };
 
   // PROTOTYPE: summon is opt-in via ?summon (off by default). Manifestation is
   // locked to Seed Hatch; summonRef is a lazy summon fn the chrome calls.
@@ -123,6 +150,7 @@ function Room() {
   // nav: how to reflect the room in the URL — 'push' (user click, new history
   // entry), 'replace' (canonicalize on load), 'none' (already navigated, e.g. back).
   function enterRoom(i: number, nav: "push" | "replace" | "none" = "push") {
+    select(null); // the selected node may be torn down by the room swap / respawn
     roomIndexRef.current = i;
     const room = ROOMS[i];
     Object.assign(cfg, room.tuning); // includes population — each room has its own cast
@@ -235,13 +263,6 @@ function Room() {
       portal.container.label = "portal";
       portalRef.current = portal;
 
-      // editor selection outline — drawn on top, follows the picked being each frame
-      const selG = new Graphics();
-      selG.eventMode = "none";
-      selG.visible = false;
-      app.stage.addChild(selG);
-      selGRef.current = selG;
-
       // The generation contract. Default = mock (works under plain `npm run dev`).
       // `?real` routes to our OWN same-origin Worker (src/worker.ts), which holds
       // the sprite-dx api-key and proxies to /api/characters — so the browser
@@ -285,23 +306,6 @@ function Room() {
         portal.update(dt, w, h, w * 0.5, h * 0.75);
         for (const b of beings) b.update(dt, w, h, ticker);
 
-        // keep the selection outline on the picked being
-        const selG2 = selGRef.current;
-        if (selG2) {
-          const sel = selectedRef.current;
-          if (sel && showDebugRef.current) {
-            const r = sel.getBounds();
-            selG2
-              .clear()
-              .rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4)
-              .stroke({ width: 1.5, color: 0xffd24a, alpha: 0.95 });
-            selG2.visible = true;
-          } else if (selG2.visible) {
-            selG2.clear();
-            selG2.visible = false;
-          }
-        }
-
         for (let a = 0; a < beings.length; a++) {
           for (let b = a + 1; b < beings.length; b++) {
             const dx = beings[a].x - beings[b].x;
@@ -340,14 +344,13 @@ function Room() {
     const app = appRef.current;
     if (portalRef.current) portalRef.current.container.eventMode = showDebug ? "none" : "static";
     if (!app || !showDebug) {
-      selectedRef.current = null;
+      select(null);
       return;
     }
     const canvas = app.canvas;
     const onDown = (e: PointerEvent) => {
-      const hit = pickBeing(beingsRef.current, e.offsetX, e.offsetY);
-      selectedRef.current = hit ? hit.container : null;
-      setSelTick((n) => n + 1);
+      const hit = pickBeing(beingsRef.current, e.offsetX, e.offsetY, app.renderer);
+      select(hit ? hit.container : null);
     };
     canvas.addEventListener("pointerdown", onDown);
     const tick = window.setInterval(() => setSelTick((n) => n + 1), 300);
@@ -386,10 +389,7 @@ function Room() {
             <Hierarchy
               getRoots={() => (appRef.current?.stage.children as Container[]) ?? []}
               selectedUid={selectedRef.current?.uid ?? null}
-              onSelect={(c) => {
-                selectedRef.current = c;
-                setSelTick((n) => n + 1);
-              }}
+              onSelect={(c) => select(c)}
             />
           </aside>
           <aside className="dbg-panel dbg-inspector">
