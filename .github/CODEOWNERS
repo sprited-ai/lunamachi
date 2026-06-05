@@ -1,0 +1,27 @@
+# Schema & engine — owner-reviewed. Contributors extend the *vocabulary*
+# (components + rooms); the room-model schema and engine are locked behind review.
+# (Requires "Require review from Code Owners" in the branch-protection rule.)
+
+# The room model's schema and engine
+/src/rooms/types.ts            @kndlt
+/src/rooms/parse.ts            @kndlt
+/src/rooms/build.ts            @kndlt
+/src/rooms/coerce.ts           @kndlt
+/src/rooms/backgrounds.ts      @kndlt
+/src/rooms/components/index.ts @kndlt
+/src/config.ts                 @kndlt
+
+# App shell & build config
+/src/main.tsx                  @kndlt
+/vite.config.ts                @kndlt
+/wrangler.jsonc                @kndlt
+/package.json                  @kndlt
+/.github/                      @kndlt
+
+# Generation tooling
+/scripts/                      @kndlt
+
+# Open to contributors (no owner gate):
+#   src/rooms/components/*.ts   — new props (the vocabulary)
+#   src/rooms/*.room.xml        — new / edited rooms
+#   src/rooms/shared.ts         — shared procedural primitives (additive)

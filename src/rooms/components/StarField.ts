@@ -12,11 +12,12 @@ interface StarFieldProp extends Prop {
 const StarField: RoomComponent = {
   tag: "StarField",
   type: "starField",
-  parse: (el) => ({ type: "starField", count: int(attr(el, "count")) } satisfies StarFieldProp),
+  parse: (el): StarFieldProp => ({ type: "starField", count: int(attr(el, "count")) }),
   mount: (prop, { container, w, h, rng }) => {
     const p = prop as StarFieldProp;
     return addStarField(container, w, h, p.count, rng);
   },
+  example: { type: "starField", count: 90 } as StarFieldProp,
 };
 
 export default StarField;

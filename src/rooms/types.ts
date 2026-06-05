@@ -53,6 +53,8 @@ export interface RoomComponent {
   parse(el: Element): Prop;
   /** draw into the scene container; omitted for non-visual / engine-handled props */
   mount?(prop: Prop, ctx: MountCtx): SceneUpdate;
+  /** a representative prop for the debug page to showcase this component with */
+  example?: Prop;
 }
 
 /** The parsed, validated room — the room model's parameter space. */

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lunamachi · component debug</title>
+    <style>
+      * { margin: 0; box-sizing: border-box; }
+      body { background: #0b0e1a; overflow: hidden; }
+      #bar {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+        display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+        padding: 10px 12px;
+      }
+      #bar button {
+        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: #cdd6f4; background: #1a1f33; border: 1px solid #2a3150;
+        padding: 5px 10px; border-radius: 6px; cursor: pointer;
+      }
+      #bar button:hover { background: #242b45; }
+      #bar button.active { background: #3b4a7a; color: #fff; border-color: #5a6aa0; }
+      #label {
+        margin-left: 8px; color: #7a86b0;
+        font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="bar"></div>
+    <script type="module" src="/src/debug.ts"></script>
+  </body>
+</html>
